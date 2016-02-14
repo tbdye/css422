@@ -3,7 +3,7 @@
 * Written by :Ross Holzworth
 * Date       :2/13/2016
 * Description:A skeleton for a 68k disassembler 
-*-----------------------------------------------------------
+*-----------------------------------------------------------    
     ORG    $1000
     
 CR      EQU     $0D
@@ -11,7 +11,7 @@ LF      EQU     $0A
 stack   EQU     $A000      
 shift   EQU     12                   * Shift 12 bits
 tst     EQU     $7000                *location of test file
-charshft    EQU     15
+charshft    EQU     28
 
  
 
@@ -31,17 +31,24 @@ loop    BSR     prntadr
         JSR     0(A0,D7)   *Jump indirect with index
 
 prntadr     LEA char_table,A3
-            MOVE.B  #15,D5
+            MOVE.B  #0,D5
+            MOVE.B  #charshft,D4
 loop2       MOVE.W  A2,D6
-            LSR.L   D5,D6
+            LSL.L   D5,D6
+            LSR.L   D4,D6
+            MULU    #2,D6
             LEA     0(A3,D6),A1
-            ADD.B   #-1,D5
+            ADD.B   #4,D5
             MOVE.B  #14,D0
             TRAP    #15
-            CMP.B   #0,D5
+            CMP.B   #32,D5
             BEQ     prntend
             BRA     loop2
-prntend     RTS
+
+prntend     LEA tab,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
             
             
 
@@ -121,6 +128,7 @@ char_table  DC.B    '0',0
             DC.B    'D',0
             DC.B    'E',0
             DC.B    'F',0
+tab         DC.B    '   ',0
 
 end         SIMHALT
 
