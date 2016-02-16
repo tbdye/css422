@@ -1,0 +1,57 @@
+00007000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 2/16/2016 12:53:12 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Test MOVE
+00000000                             3  * Written by : Thomas Dye
+00000000                             4  * Date       : 2/16/2016
+00000000                             5  * Description: Test basic functionality of MOVE opcode.
+00000000                             6  *-----------------------------------------------------------
+00007000                             7          ORG     $7000
+00007000                             8  START:
+00007000                             9  
+00007000                            10  * Test Size (also tests Dn as dest and Dn as src)
+00007000  1007                      11          MOVE.B  D7,D0           ;test01 size byte
+00007002  3206                      12          MOVE.W  D6,D1           ;test02 size word
+00007004  2405                      13          MOVE.L  D5,D2           ;test03 size long 
+00007006                            14      
+00007006                            15  * Test Destination EA
+00007006  1081                      16          MOVE.B  D1,(A0)         ;test04 dest (An)
+00007008  10C1                      17          MOVE.B  D1,(A0)+        ;test05 dest (An)+
+0000700A  1101                      18          MOVE.B  D1,-(A0)        ;test06 dest -(An)
+0000700C  11C1 42A6                 19          MOVE.B  D1,$42A6        ;test07 dest (xxx).W
+00007010  13C1 0000A000             20          MOVE.B  D1,$0000A000    ;test08 dest (xxx).L
+00007016                            21  
+00007016                            22  * Test Source EA
+00007016  3209                      23          MOVE.W  A1,D1           ;test09 src An
+00007018  1211                      24          MOVE.B  (A1),D1         ;test10 src (An)
+0000701A  1219                      25          MOVE.B  (A1)+,D1        ;test11 src (An)+
+0000701C  1221                      26          MOVE.B  -(A1),D1        ;test12 src -(An)
+0000701E  3238 42A6                 27          MOVE.W  $42A6,D1        ;test13 src (xxx).W
+00007022  2239 0000A000             28          MOVE.L  $0000A000,D1    ;test14 src (xxx).L
+00007028  123C 002A                 29          MOVE.B  #$2A,D1         ;test15 src #<data>
+0000702C                            30          
+0000702C                            31  * Tricky
+0000702C  303C 9100                 32          MOVE.W  #$9100,D0       ;test16
+00007030  203C 00009100             33          MOVE.L  #$9100,D0       ;test17
+00007036  303C 4214                 34          MOVE.W  #$4214,D0       ;test18
+0000703A  203C 00004214             35          MOVE.L  #$4214,D0       ;test19
+00007040  1638 4340                 36          MOVE.B  $00004340,D3    ;test20
+00007044  1639 0000A340             37          MOVE.B  $A340,D3        ;test21
+0000704A  1638 A340                 38          MOVE.B  $FFFFA340,D3    ;test22
+0000704E  1639 FFFF4340             39          MOVE.B  $FFFF4340,D3    ;test23
+00007054  3639 0000A340             40          MOVE.W  $A340,D3        ;test24
+0000705A                            41          
+0000705A  FFFF FFFF                 42          SIMHALT                 ;halt simulator
+0000705E                            43  
+0000705E                            44          END     START           ;last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+START               7000
