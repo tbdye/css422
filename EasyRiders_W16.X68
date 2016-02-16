@@ -208,8 +208,8 @@ DISPLAY_OUTPUT
 INVALID_MODE
 
 INVALID_OP
-                NOP             ;Do error stuff
-                BRA     INPUT   ;Take next input
+                NOP                 ;Do error stuff
+                BRA     INPUT       ;Take next input
 
 *------------------------------------------------------------------------------
 * Variables and Constants
@@ -223,6 +223,7 @@ START_TEXT      DC.B    'Welcome message to display here.',CR,LF,0
 
 TERMINATE       SIMHALT             ;Halt the simulator
                 END     START       ;Do not put anything below this line.
+
 
 
 *~Font name~Courier New~
