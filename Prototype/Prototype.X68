@@ -4,11 +4,12 @@
 * Date       :2/13/2016
 * Description:A skeleton for a 68k disassembler 
 *-----------------------------------------------------------    
-    ORG    $1000
-    
+
+
+*----------------Constants (I'm not sure where to put these)-    
 CR      EQU     $0D
 LF      EQU     $0A
-stack   EQU     $A000      
+*stack   EQU     $A000  
 shift   EQU     12                   * Shift 12 bits
 tst     EQU     $7000                *location of test file
 charshft    EQU     28
@@ -19,95 +20,139 @@ charshft    EQU     28
 
     ORG     $1000
 
-start   LEA     stack,SP        *Load the SP
-        LEA     jmp_table,A0    *Index into the table
-        MOVE.W  #tst,A2
-loop    BSR     prntadr
+
+
+start   *LEA     stack,SP        Load the SP (commented out. don't know why this is in the example)
+
+*----------------Input ----------------------------------
+        MOVE.W  #tst,A2         *collect input from the user to determine where to start in memory        
+
+
+*---------Root Branch-----------------------------------
+        LEA     jmp_table,A0    *Index into the table        
+loop    JSR     PRNTADR
         CLR.L   D7              *Zero it
         MOVE.W  (A2)+,D7     *We'll play with it here
         MOVE.B  #shift,D1       *Shift 12 bits to the right  
         LSR.W   D1,D7           *Move the bits
         MULU    #6,D7       *Form offset     
         JSR     0(A0,D7)   *Jump indirect with index
+        BRA     loop            
+            
 
-prntadr     LEA char_table,A3
-            MOVE.B  #0,D5
-            MOVE.B  #charshft,D4
-loop2       MOVE.W  A2,D6
-            LSL.L   D5,D6
-            LSR.L   D4,D6
-            MULU    #2,D6
-            LEA     0(A3,D6),A1
-            ADD.B   #4,D5
-            MOVE.B  #14,D0
-            TRAP    #15
-            CMP.B   #32,D5
-            BEQ     prntend
-            BRA     loop2
+jmp_table   JMP BRANCH_0
+            JMP BRANCH_1
+            JMP BRANCH_2
+            JMP BRANCH_3
+            JMP BRANCH_4
+            JMP BRANCH_5
+            JMP BRANCH_6
+            JMP BRANCH_7
+            JMP BRANCH_8
+            JMP BRANCH_9
+            JMP BRANCH_A
+            JMP BRANCH_B
+            JMP BRANCH_C
+            JMP BRANCH_D
+            JMP BRANCH_E
+            JMP BRANCH_F
 
-prntend     LEA tab,A1
+
+*------------Branch 0------------
+
+BRANCH_0    RTS
+
+
+*-----------Branch 1-------------
+BRANCH_1    RTS
+
+*-----------Branch 2-------------
+BRANCH_2    RTS
+
+
+*-----------Branch 3-------------
+BRANCH_3    RTS
+
+*-----------Branch 4-------------
+BRANCH_4    LEA     op0100,A1
             MOVE.B  #14,D0
             TRAP    #15
             RTS
-            
-            
 
-jmp_table   JMP code0000
-            JMP code0001
-            JMP code0010
-            JMP code0011
-            JMP code0100
-            JMP code0101
-            JMP code0110
-            JMP code0111
-            JMP code1000
-            JMP code1001
-            JMP code1010
-            JMP code1011
-            JMP code1100
-            JMP code1101
-            JMP code1110
-            JMP code1111
+*-----------Branch 5-------------            
+BRANCH_5    RTS
 
+*-----------Branch 6-------------
+BRANCH_6    RTS
 
+*-----------Branch 7-------------
+BRANCH_7    RTS
 
-code0000    BRA loop
+*-----------Branch 8-------------
+BRANCH_8    RTS
 
-code0001    BRA loop
+*-----------Branch 9-------------
+BRANCH_9    RTS
 
-code0010    BRA loop
+*-----------Branch A-------------
+BRANCH_A    RTS
 
-code0011    BRA loop
+*-----------Branch B-------------
+BRANCH_B    RTS
 
-code0100    LEA     op0100,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-            BRA loop
-            
-code0101    BRA loop
+*-----------Branch C-------------
+BRANCH_C    RTS
 
-code0110    BRA loop
+*-----------Branch D-------------
+BRANCH_D    RTS
 
-code0111    BRA loop
+*-----------Branch E-------------
+BRANCH_E    RTS
 
-code1000    BRA loop
-
-code1001    BRA loop
-
-code1010    BRA loop
-
-code1011    BRA loop
-
-code1100    BRA loop
-
-code1101    BRA loop
-
-code1110    BRA loop
-
-code1111    LEA     op1111,A1
+*-----------Branch F-------------
+BRANCH_F    LEA     op1111,A1
             MOVE.B  #14,D0
             TRAP    #15
             BRA end
+
+
+
+
+*-------------Subroutines------------------
+
+*printadr prints the hex address in A2 when called
+*
+PRNTADR     LEA char_table,A3    *load constants and table into registers
+            MOVE.B  #0,D5        
+            MOVE.B  #charshft,D4
+
+loop2       *load the address to be printed into D6
+            MOVE.W  A2,D6
+        
+            *isolate nibble in D6 to be printed as a hex character
+            LSL.L   D5,D6        
+            LSR.L   D4,D6
+
+            *Multiply nibble by two, find character in char_table
+            MULU    #2,D6
+            LEA     0(A3,D6),A1
+
+            *print char
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            *increment loop counter by four, check if loop is done
+            ADD.B   #4,D5
+            CMP.B   #32,D5
+            BEQ     prnttab
+            BRA     loop2
+
+prnttab     *add a tab to the end of a printed string, leave subroutine
+            LEA tab,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
+
 
 op0100      DC.B    'NOP',CR,LF,0
 op1111      DC.B    'SIMHALT',CR,LF,0
