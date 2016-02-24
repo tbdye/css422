@@ -3,7 +3,7 @@ css422
 
 University of Washington | Bothell - Winter 2016
 Course:  CSS 422 - Hardware and Computer Organization
-Instructor:  Dr. Peng Yang
+Instructor:  Dr. Yang Peng
 
 Course Description:
 
