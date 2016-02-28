@@ -9,11 +9,14 @@ START:                  ; first instruction of program
 
 * Put program code here
     NOP
+    NOP
+    NOP
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
