@@ -1,7 +1,7 @@
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
-* Date       : 2/24/16
+* Date       : 2/27/16
 * Description: CSS 422 Final Project - University of Washington | Bothell
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
@@ -9,20 +9,39 @@
 *---------------Opcode--Operands------------Comments---------------------------
 START           ORG     $1000               ;Load at this address
 
-*   Get User Input
-                MOVE.W  #$7000,A2           ;TEMP collect input from the user to determine where to start in memory
+* Display message prompt
+                LEA     MSG_PROMPT,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+* Get User Input
+                LEA     INPUT_BUFFER,A1     ;Raw input will store at INPUT_BUFFER
+                MOVE.B  #2,D0               ;Read string from keyboard to A1
+                TRAP    #15                 ;Get the user input from console, length in D1
 
-*   Process Instructions
-                LEA     ROOT_JMP_TABLE,A0   ;Index into the table        
+* Convert ascii input to hex
+                CLR.L   D0                  ;Use D0 and D1 to process ascii to hex conversion.
+                CLR.L   D1                  ;Ensure both are clear of data.
+                
+                JSR     SR_AtoHLoop         ;Convert raw input ascii characters to hex
+                MOVE.L  D2,INPUT_LOC        ;Store hex value user data location
+
+* Process Instructions
+                LEA     ROOT_JMP_TABLE,A0   ;Index into the table
+                MOVEA.L INPUT_LOC,A2        ;Point to the location of input machine code
+
 piLoop          JSR     SR_PrintAddr
-                CLR.L   D7                  ;Zero it
-                MOVE.W  (A2),D7             ;We'll play with it here
-                MOVE.B  #12,D1              ;Shift 12 bits to the right  
-                LSR.W   D1,D7               ;Move the bits
-                MULU    #6,D7               ;Form offset     
-                JSR     0(A0,D7)            ;Jump indirect with index
-                ADDA    #2,A2
+                CLR.L   D7                  ;Clear existing opcode, if any exists
+                MOVE.W  (A2),D7             ;Load next opcode
+                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1 
+                LSR.W   D1,D7               ;Use shift to isolate bits for root branch
+                MULU    #6,D7               ;Form offset to travel on jump table 
+                JSR     0(A0,D7)            ;Jump to appropriate opcode, then return
+                CMP.B   #1,BOOL_FINISHED    ;Check if end of input machine code has been reached
+                BEQ     TERMINATE           ;Exit the loop.
+                ADDA    #2,A2               ;Advance to next opcode
                 BRA     piLoop 
+
+TERMINATE       SIMHALT                     ;Halt the simulator
 
 *------------------------------------------------------------------------------
 * Root Branch - bits 15-12 ----------------------------------------------------
@@ -53,9 +72,13 @@ ROOT_JMP_TABLE  JMP     BRANCH_0            ;$0 - Bit Manipulation/MOVEP/Immedia
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_0        JSR     SR_Eval11to8
 
+                CMP     #$0,D7
                 BEQ     OP_ANDI             ;$0
+                CMP     #$3,D7
                 BEQ     OP_ADDI             ;$3
+                CMP     #$8,D7
                 BEQ     OP_BCHG             ;$8
+                CMP     #$C,D7
                 BEQ     OP_CMPI             ;$C
 
                 JSR     SR_Eval7to6
@@ -65,10 +88,11 @@ BRANCH_0        JSR     SR_Eval11to8
 
 * From Root to Branch 4
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_4        BRA     OP_NOP              ;Temp unconditional branch for testing
-                JSR     SR_Eval11to8
+BRANCH_4        JSR     SR_Eval11to8
                 
+                CMP     #$2,D7
                 BEQ     OP_CLR              ;$2
+                CMP     #$E,D7
                 BEQ     BRANCH_4E           ;$E
                 
                 BEQ     SR_Eval11to6
@@ -81,8 +105,11 @@ BRANCH_4        BRA     OP_NOP              ;Temp unconditional branch for testi
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_6        JSR     SR_Eval11to8
                 
+                CMP     #$4,D7
                 BEQ     OP_BCC              ;$4
+                CMP     #$E,D7
                 BEQ     OP_BGT              ;$E
+                CMP     #$F,D7
                 BEQ     OP_BLE              ;$F
                 
                 BRA     OP_INVALID          ;No matches found
@@ -149,7 +176,8 @@ BRANCH_F        BRA     OP_SIMHALT
 * From Branch 4 to Branch 4E
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E       JSR     SR_Eval7to4
-
+                
+                CMP     #$7,D7
                 BEQ     BRANCH_4E7          ;$7
                 
                 JSR     SR_Eval7to6
@@ -164,7 +192,9 @@ BRANCH_4E       JSR     SR_Eval7to4
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E7      JSR     SR_Eval3to0
 
+                CMP     #$1,D7
                 BEQ     OP_NOP              ;$1
+                CMP     #$5,D7
                 BEQ     OP_RTS              ;$5
                 BRA     OP_INVALID          ;No matches found
 
@@ -173,83 +203,83 @@ BRANCH_4E7      JSR     SR_Eval3to0
 *------------------------------------------------------------------------------
 * Add
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADD
+OP_ADD          BRA     OP_INVALID
 
 * Add Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDA
+OP_ADDA         BRA     OP_INVALID
 
 * Add Immediate
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDI
+OP_ADDI         BRA     OP_INVALID
 
 * AND Logical
 *---------------Opcode--Operands------------Comments---------------------------
-OP_AND
+OP_AND          BRA     OP_INVALID
 
 * AND Immediate
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ANDI
+OP_ANDI         BRA     OP_INVALID
 
 * Arithmetic Shift Left
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ASL
+OP_ASL          BRA     OP_INVALID
 
 * Arithmetic Shift Right
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ASR
+OP_ASR          BRA     OP_INVALID
 
 * Branch Conditionally - Carry Clear
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BCC
+OP_BCC          BRA     OP_INVALID
 
 * Test a Bit and Change
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BCHG
+OP_BCHG         BRA     OP_INVALID
 
 * Branch Conditionally - Greater Than
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BGT
+OP_BGT          BRA     OP_INVALID
 
 * Branch Conditionally - Less or Equal
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BLE
+OP_BLE          BRA     OP_INVALID
 
 * Clear an Operand
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CLR
+OP_CLR          BRA     OP_INVALID
 
 * Compare
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CMP
+OP_CMP          BRA     OP_INVALID
 
 * Compare Immediate
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CMPI
+OP_CMPI         BRA     OP_INVALID
 
 * Signed Divide
 *---------------Opcode--Operands------------Comments---------------------------
-OP_DIVS
+OP_DIVS         BRA     OP_INVALID
 
 * Disassembler does not support provided opcode
 *---------------Opcode--Operands------------Comments---------------------------
-OP_INVALID
+OP_INVALID      RTS
 
 * Jump to Subroutine
 *---------------Opcode--Operands------------Comments---------------------------
-OP_JSR
+OP_JSR          BRA     OP_INVALID
 
 * Load Effective Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LEA
+OP_LEA          BRA     OP_INVALID
 
 * Logical Shift Left
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LSL
+OP_LSL          BRA     OP_INVALID
 
 * Logical Shift Right
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LSR
+OP_LSR          BRA     OP_INVALID
 
 * Move Data from Source to Destination - Byte
 *---------------Opcode--Operands------------Comments---------------------------
@@ -301,23 +331,23 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
 
 * Move Data from Source to Destination - Long
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVE_L
+OP_MOVE_L       BRA     OP_INVALID
 
 * Move Data from Source to Destination - Word
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVE_W
+OP_MOVE_W       BRA     OP_INVALID
 
 * Move Multiple Registers
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEM
+OP_MOVEM        BRA     OP_INVALID
 
 * Move Quick
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEQ
+OP_MOVEQ        BRA     OP_INVALID
 
 * Signed Multiply
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MULS
+OP_MULS         BRA     OP_INVALID
 
 * No Operation
 *---------------Opcode--Operands------------Comments---------------------------
@@ -328,34 +358,52 @@ OP_NOP          LEA     DISP_NOP,A1
 
 * Rotate (Without Extend) Left
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ROL
+OP_ROL          BRA     OP_INVALID
 
 * Rotate (Without Extend) Right
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ROR
+OP_ROR          BRA     OP_INVALID
 
 * Return from Subroutine
 *---------------Opcode--Operands------------Comments---------------------------
-OP_RTS
+OP_RTS          BRA     OP_INVALID
 
 * PseudoOp Simhalt
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SIMHALT      LEA     DISP_SIMHALT,A1
                 MOVE.B  #13,D0
                 TRAP    #15
-                BRA     TERMINATE
+                MOVE.B  #1,BOOL_FINISHED    ;Mark that input machine code ended
+                RTS
 
 * Subtract
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUB
+OP_SUB          BRA     OP_INVALID
 
 * Subtract Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUBA
+OP_SUBA         BRA     OP_INVALID
 
 *------------------------------------------------------------------------------
 * Subroutines -----------------------------------------------------------------
 *------------------------------------------------------------------------------
+* Ascii to Hex Loop
+* Helper subroutine to process raw ascii and convert it to hex.
+* Input Parameters: A1
+* Return Parameters: D2.L contains the input number converted to hex
+* Registers used internally: D0, D1
+*---------------Opcode--Operands------------Comments---------------------------
+SR_AtoHLoop     MOVE.B  (A1)+,D0            ; Get the first byte
+                JSR     SR_Strip_Ascii      ; Get rid of the ASCII code.
+                ADD.L   D0,D1               ; Load the char into D1
+                CMPI.B  #$0,(A1)            ; Evaluate if there is more work to do.
+                BEQ     athEndLoop          ; If not, exit the loop.
+                LSL.L   #$4,D1              ; Otherwise, shift the char left in D1 for the next char
+                BRA     SR_AtoHLoop         ; Continue working
+  
+athEndLoop      MOVE.L  D1,D2               ; Return hex number in D2
+                RTS
+
 * SR_DecodeEA determines and prints the effective address mode and register of
 * six bits
 * Registers passed: D2(mode), D3(register)
@@ -411,11 +459,19 @@ deMode_111      RTS
 
 * Evaluate Bits 3 to 0
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval3to0     RTS
+SR_Eval3to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1
+                LSL.W   D1,D7               ;Truncate up to forth nibble
+                LSR.W   D1,D7               ;Isolate nibble
+                RTS
 
 * Evaluate Bits 7 to 4
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval7to4     RTS
+SR_Eval7to4     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1
+                LSL.W   #8,D7               ;Truncate up to third nibble
+                LSR.W   D1,D7               ;Isolate nibble
+                RTS
 
 * Evaluate Bits 7 to 6
 *---------------Opcode--Operands------------Comments---------------------------
@@ -435,7 +491,11 @@ SR_Eval11to6    RTS
 
 * Evaluate Bits 11 to 8
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval11to8    RTS
+SR_Eval11to8    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1
+                LSL.W   #4,D7               ;Truncate up to second nibble
+                LSR.W   D1,D7               ;Isolate nibble
+                RTS
 
 * Prints the hex address in A2 when called
 * Registers passed: A2
@@ -473,6 +533,24 @@ SR_PrintTab     LEA     DISP_TAB,A1
                 TRAP    #15
                 RTS
 
+* Strip Ascii
+* Remove the ascii code from the digits 0-9,a-f, or A-F
+* Input Parameters: <D0> = ascii code
+* Return Parameters: D0.B = number 0...F, returned as 00...0F
+* Registers used internally: D0
+* Assumptions: D0 contains $30-$39, $41-$46 or $61-66
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Strip_Ascii  CMP.B   #$39,D0             ; Is it in range of 0-9?
+                BLE     saSub30             ; It's a number
+                CMP.B   #$46,D0             ; Is is A...F?
+                BLE     saSub37             ; It's A...F
+                SUB.B   #$57,D0             ; It's a...f
+                BRA     saReturn            ; Go back
+saSub37         SUB.B   #$37,D0             ; Strip 37
+                BRA     saReturn            ; Go back
+saSub30         SUB.B   #$30,D0             ; Strip 30
+saReturn        RTS                         ; Go back
+
 *------------------------------------------------------------------------------
 * Variables and Constants -----------------------------------------------------
 *------------------------------------------------------------------------------
@@ -481,7 +559,11 @@ SR_PrintTab     LEA     DISP_TAB,A1
 CR              EQU     $0D                 ;Carriage Return
 LF              EQU     $0A                 ;Line feed
 
-MSG_WELCOME     DC.B    'Welcome message to display here.',CR,LF,0
+INPUT_BUFFER    EQU     $2000               ;Create an input buffer for ascii strings.
+INPUT_LOC       DS.L    1                   ;Location to read input data
+BOOL_FINISHED   DS.B    1                   ;Finished reading data
+
+MSG_PROMPT      DC.B    'Load data from location: ',0
 MSG_LINEBREAK   DC.B    CR,LF,0
 
 DISP_NOP        DC.B    'NOP',0
@@ -511,9 +593,8 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'E',0
                 DC.B    'F',0
 
-TERMINATE       SIMHALT                     ;Halt the simulator
-
                 END     START               ;Do not put anything below this line.
+
 
 *~Font name~Courier New~
 *~Font size~10~
