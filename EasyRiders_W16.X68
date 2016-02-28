@@ -23,22 +23,27 @@ START           ORG     $1000               ;Load at this address
                 CLR.L   D1                  ;Ensure both are clear of data.
                 
                 JSR     SR_AtoHLoop         ;Convert raw input ascii characters to hex
-                MOVE.L  D2,INPUT_LOC        ;Store hex value user data location
+                MOVE.L  D7,INPUT_LOC        ;Store hex value user data location
 
 * Process Instructions
                 LEA     ROOT_JMP_TABLE,A0   ;Index into the table
                 MOVEA.L INPUT_LOC,A2        ;Point to the location of input machine code
-
-piLoop          JSR     SR_PrintAddr
+                
+                MOVE.B  #0,LINECOUNT        ;Initialize counter to 0
+                
+piLoop          CMPI.B  #30,LINECOUNT       ;Pause output if screen lines = 30
+                BEQ     FN_PauseOutput
+piReturn        JSR     SR_PrintAddr
                 CLR.L   D7                  ;Clear existing opcode, if any exists
                 MOVE.W  (A2),D7             ;Load next opcode
-                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1 
-                LSR.W   D1,D7               ;Use shift to isolate bits for root branch
+                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
+                LSR.W   D0,D7               ;Use shift to isolate bits for root branch
                 MULU    #6,D7               ;Form offset to travel on jump table 
                 JSR     0(A0,D7)            ;Jump to appropriate opcode, then return
                 CMP.B   #1,BOOL_FINISHED    ;Check if end of input machine code has been reached
                 BEQ     TERMINATE           ;Exit the loop.
                 ADDA    #2,A2               ;Advance to next opcode
+                ADDQ.B  #1,LINECOUNT        ;Increment screen line counter
                 BRA     piLoop 
 
 TERMINATE       SIMHALT                     ;Halt the simulator
@@ -72,16 +77,18 @@ ROOT_JMP_TABLE  JMP     BRANCH_0            ;$0 - Bit Manipulation/MOVEP/Immedia
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_0        JSR     SR_Eval11to8
 
-                CMP     #$0,D7
+                CMP.B   #$0,D7
                 BEQ     OP_ANDI             ;$0
-                CMP     #$3,D7
+                CMP.B   #$3,D7
                 BEQ     OP_ADDI             ;$3
-                CMP     #$8,D7
+                CMP.B   #$8,D7
                 BEQ     OP_BCHG             ;$8
-                CMP     #$C,D7
+                CMP.B   #$C,D7
                 BEQ     OP_CMPI             ;$C
 
                 JSR     SR_Eval7to6
+                
+                CMP.B   #%01,D7
                 BEQ     OP_BCHG             ;%01
 
                 BRA     OP_INVALID          ;No matches found
@@ -90,9 +97,9 @@ BRANCH_0        JSR     SR_Eval11to8
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4        JSR     SR_Eval11to8
                 
-                CMP     #$2,D7
+                CMP.B   #$2,D7
                 BEQ     OP_CLR              ;$2
-                CMP     #$E,D7
+                CMP.B   #$E,D7
                 BEQ     BRANCH_4E           ;$E
                 
                 BEQ     SR_Eval11to6
@@ -105,11 +112,11 @@ BRANCH_4        JSR     SR_Eval11to8
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_6        JSR     SR_Eval11to8
                 
-                CMP     #$4,D7
+                CMP.B   #$4,D7
                 BEQ     OP_BCC              ;$4
-                CMP     #$E,D7
+                CMP.B   #$E,D7
                 BEQ     OP_BGT              ;$E
-                CMP     #$F,D7
+                CMP.B   #$F,D7
                 BEQ     OP_BLE              ;$F
                 
                 BRA     OP_INVALID          ;No matches found
@@ -118,23 +125,29 @@ BRANCH_6        JSR     SR_Eval11to8
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_8        JSR     SR_Eval8to6
                 
+                CMP.B   #%111,D7
                 BEQ     OP_INVALID          ;%111 - Op not supported
-                BRA     OP_DIVS
+                BRA     OP_DIVS             ;All other combinations
 
 * From Root to Branch 8
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_9        JSR     SR_Eval8to6
 
+                CMP.B   #%011,D7
                 BEQ     OP_SUBA             ;%011
+                CMP.B   #%111,D7
                 BEQ     OP_SUBA             ;%111
-                BRA     OP_SUB
+                BRA     OP_SUB              ;All other combinations
 
 * From Root to Branch B
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_B        JSR     SR_Eval8to6
 
+                CMP.B   #%000,D7
                 BEQ     OP_CMP              ;%000
+                CMP.B   #%001,D7
                 BEQ     OP_CMP              ;%001
+                CMP.B   #%010,D7
                 BEQ     OP_CMP              ;%010
                 BRA     OP_INVALID          ;No matches found
 
@@ -142,17 +155,21 @@ BRANCH_B        JSR     SR_Eval8to6
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_C        JSR     SR_Eval8to6
 
+                CMP.B   #%011,D7
                 BEQ     OP_INVALID          ;%011 - Op not supported
+                CMP.B   #%111,D7
                 BEQ     OP_MULS             ;%111
-                BRA     OP_AND
+                BRA     OP_AND              ;All other combinations
 
 * From Root to Branch D
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_D        JSR     SR_Eval8to6
 
+                CMP.B   #%011,D7
                 BEQ     OP_ADDA             ;%011
+                CMP.B   #%111,D7
                 BEQ     OP_ADDA             ;%111
-                BRA     OP_ADD
+                BRA     OP_ADD              ;All other combinations
 
 * From Root to Branch E
 *---------------Opcode--Operands------------Comments---------------------------
@@ -177,11 +194,12 @@ BRANCH_F        BRA     OP_SIMHALT
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E       JSR     SR_Eval7to4
                 
-                CMP     #$7,D7
+                CMP.B   #$7,D7
                 BEQ     BRANCH_4E7          ;$7
                 
                 JSR     SR_Eval7to6
                 
+                CMP.B   #%10,D7
                 BEQ     OP_JSR              ;%10
                 BRA     OP_INVALID          ;No matches found
             
@@ -192,9 +210,9 @@ BRANCH_4E       JSR     SR_Eval7to4
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E7      JSR     SR_Eval3to0
 
-                CMP     #$1,D7
+                CMP.B   #$1,D7
                 BEQ     OP_NOP              ;$1
-                CMP     #$5,D7
+                CMP.B   #$5,D7
                 BEQ     OP_RTS              ;$5
                 BRA     OP_INVALID          ;No matches found
 
@@ -203,11 +221,17 @@ BRANCH_4E7      JSR     SR_Eval3to0
 *------------------------------------------------------------------------------
 * Add
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADD          BRA     OP_INVALID
+OP_ADD          LEA     DISP_ADD,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Add Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDA         BRA     OP_INVALID
+OP_ADDA         LEA     DISP_ADDA,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Add Immediate
 *---------------Opcode--Operands------------Comments---------------------------
@@ -263,7 +287,10 @@ OP_DIVS         BRA     OP_INVALID
 
 * Disassembler does not support provided opcode
 *---------------Opcode--Operands------------Comments---------------------------
-OP_INVALID      RTS
+OP_INVALID      LEA     DISP_INVALID,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Jump to Subroutine
 *---------------Opcode--Operands------------Comments---------------------------
@@ -385,6 +412,19 @@ OP_SUB          BRA     OP_INVALID
 OP_SUBA         BRA     OP_INVALID
 
 *------------------------------------------------------------------------------
+* Functions -------------------------------------------------------------------
+*------------------------------------------------------------------------------
+* Pause Screen Output
+*---------------Opcode--Operands------------Comments---------------------------
+FN_PauseOutput  LEA     MSG_PAUSE,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                MOVE.B  #5,D0
+                TRAP    #15
+                MOVE.B  #0,LINECOUNT
+                BRA     piReturn
+
+*------------------------------------------------------------------------------
 * Subroutines -----------------------------------------------------------------
 *------------------------------------------------------------------------------
 * Ascii to Hex Loop
@@ -401,7 +441,7 @@ SR_AtoHLoop     MOVE.B  (A1)+,D0            ; Get the first byte
                 LSL.L   #$4,D1              ; Otherwise, shift the char left in D1 for the next char
                 BRA     SR_AtoHLoop         ; Continue working
   
-athEndLoop      MOVE.L  D1,D2               ; Return hex number in D2
+athEndLoop      MOVE.L  D1,D7               ; Return hex number in D7
                 RTS
 
 * SR_DecodeEA determines and prints the effective address mode and register of
@@ -460,22 +500,26 @@ deMode_111      RTS
 * Evaluate Bits 3 to 0
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval3to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1
-                LSL.W   D1,D7               ;Truncate up to forth nibble
-                LSR.W   D1,D7               ;Isolate nibble
+                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
+                LSL.W   D0,D7               ;Truncate up to forth nibble
+                LSR.W   D0,D7               ;Isolate nibble
                 RTS
 
 * Evaluate Bits 7 to 4
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval7to4     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1
+                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSL.W   #8,D7               ;Truncate up to third nibble
-                LSR.W   D1,D7               ;Isolate nibble
+                LSR.W   D0,D7               ;Isolate nibble
                 RTS
 
 * Evaluate Bits 7 to 6
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval7to6     RTS
+SR_Eval7to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #14,D0              ;Prepare a shift of 12 bits
+                LSL.W   #8,D7               ;Truncate up to bit 7
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 8 to 3
 *---------------Opcode--Operands------------Comments---------------------------
@@ -483,7 +527,11 @@ SR_Eval8to3     RTS
 
 * Evaluate Bits 8 to 6
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval8to6     RTS
+SR_Eval8to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #13,D0              ;Prepare a shift of 13 bits
+                LSL.W   #7,D7               ;Truncate up to bit 8
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 11 to 6
 *---------------Opcode--Operands------------Comments---------------------------
@@ -492,9 +540,9 @@ SR_Eval11to6    RTS
 * Evaluate Bits 11 to 8
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval11to8    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1
+                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSL.W   #4,D7               ;Truncate up to second nibble
-                LSR.W   D1,D7               ;Isolate nibble
+                LSR.W   D0,D7               ;Isolate nibble
                 RTS
 
 * Prints the hex address in A2 when called
@@ -562,12 +610,17 @@ LF              EQU     $0A                 ;Line feed
 INPUT_BUFFER    EQU     $2000               ;Create an input buffer for ascii strings.
 INPUT_LOC       DS.L    1                   ;Location to read input data
 BOOL_FINISHED   DS.B    1                   ;Finished reading data
+LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
 
 MSG_PROMPT      DC.B    'Load data from location: ',0
+MSG_PAUSE       DC.B    'Press enter to continue output.',0
 MSG_LINEBREAK   DC.B    CR,LF,0
 
+DISP_ADD        DC.B    'ADD',0
+DISP_ADDA       DC.B    'ADDA',0
 DISP_NOP        DC.B    'NOP',0
 DISP_MOVE       DC.B    'MOVE',0
+DISP_INVALID    DC.B    'INVALID',0
 DISP_SIMHALT    DC.B    'SIMHALT',0
 
 DISP_TAB        DC.B    '   ',0
@@ -594,6 +647,7 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
+
 
 
 *~Font name~Courier New~
