@@ -1,7 +1,7 @@
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
-* Date       : 2/24/16
+* Date       : 2/27/16
 * Description: CSS 422 Final Project - University of Washington | Bothell
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
@@ -9,20 +9,39 @@
 *---------------Opcode--Operands------------Comments---------------------------
 START           ORG     $1000               ;Load at this address
 
-*   Get User Input
-                MOVE.W  #$7000,A2           ;TEMP collect input from the user to determine where to start in memory
+* Display message prompt
+                LEA     MSG_PROMPT,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+* Get User Input
+                LEA     INPUT_BUFFER,A1     ;Raw input will store at INPUT_BUFFER
+                MOVE.B  #2,D0               ;Read string from keyboard to A1
+                TRAP    #15                 ;Get the user input from console, length in D1
 
-*   Process Instructions
-                LEA     ROOT_JMP_TABLE,A0   ;Index into the table        
+* Convert ascii input to hex
+                CLR.L   D0                  ;Use D0 and D1 to process ascii to hex conversion.
+                CLR.L   D1                  ;Ensure both are clear of data.
+                
+                JSR     SR_AtoHLoop         ;Convert raw input ascii characters to hex
+                MOVE.L  D2,INPUT_LOC        ;Store hex value user data location
+
+* Process Instructions
+                LEA     ROOT_JMP_TABLE,A0   ;Index into the table
+                MOVEA.L INPUT_LOC,A2        ;Point to the location of input machine code
+
 piLoop          JSR     SR_PrintAddr
-                CLR.L   D7                  ;Zero it
-                MOVE.W  (A2),D7             ;We'll play with it here
-                MOVE.B  #12,D1              ;Shift 12 bits to the right  
-                LSR.W   D1,D7               ;Move the bits
-                MULU    #6,D7               ;Form offset     
-                JSR     0(A0,D7)            ;Jump indirect with index
-                ADDA    #2,A2
+                CLR.L   D7                  ;Clear existing opcode, if any exists
+                MOVE.W  (A2),D7             ;Load next opcode
+                MOVE.B  #12,D1              ;Prepare a shift of 12 bits to use in D1 
+                LSR.W   D1,D7               ;Use shift to isolate bits for root branch
+                MULU    #6,D7               ;Form offset to travel on jump table 
+                JSR     0(A0,D7)            ;Jump to appropriate opcode, then return
+                CMP.B   #1,BOOL_FINISHED    ;Check if end of input machine code has been reached
+                BEQ     TERMINATE           ;Exit the loop.
+                ADDA    #2,A2               ;Advance to next opcode
                 BRA     piLoop 
+
+TERMINATE       SIMHALT                     ;Halt the simulator
 
 *------------------------------------------------------------------------------
 * Root Branch - bits 15-12 ----------------------------------------------------
@@ -343,7 +362,8 @@ OP_RTS
 OP_SIMHALT      LEA     DISP_SIMHALT,A1
                 MOVE.B  #13,D0
                 TRAP    #15
-                BRA     TERMINATE
+                MOVE.B  #1,BOOL_FINISHED    ;Mark that input machine code ended
+                RTS
 
 * Subtract
 *---------------Opcode--Operands------------Comments---------------------------
@@ -356,6 +376,23 @@ OP_SUBA
 *------------------------------------------------------------------------------
 * Subroutines -----------------------------------------------------------------
 *------------------------------------------------------------------------------
+* Ascii to Hex Loop
+* Helper subroutine to process raw ascii and convert it to hex.
+* Input Parameters: A1
+* Return Parameters: D2.L contains the input number converted to hex
+* Registers used internally: D0, D1
+*---------------Opcode--Operands------------Comments---------------------------
+SR_AtoHLoop     MOVE.B  (A1)+,D0            ; Get the first byte
+                JSR     SR_Strip_Ascii      ; Get rid of the ASCII code.
+                ADD.L   D0,D1               ; Load the char into D1
+                CMPI.B  #$0,(A1)            ; Evaluate if there is more work to do.
+                BEQ     athEndLoop          ; If not, exit the loop.
+                LSL.L   #$4,D1              ; Otherwise, shift the char left in D1 for the next char
+                BRA     SR_AtoHLoop         ; Continue working
+  
+athEndLoop      MOVE.L  D1,D2               ; Return hex number in D2
+                RTS
+
 * SR_DecodeEA determines and prints the effective address mode and register of
 * six bits
 * Registers passed: D2(mode), D3(register)
@@ -473,6 +510,24 @@ SR_PrintTab     LEA     DISP_TAB,A1
                 TRAP    #15
                 RTS
 
+* Strip Ascii
+* Remove the ascii code from the digits 0-9,a-f, or A-F
+* Input Parameters: <D0> = ascii code
+* Return Parameters: D0.B = number 0...F, returned as 00...0F
+* Registers used internally: D0
+* Assumptions: D0 contains $30-$39, $41-$46 or $61-66
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Strip_Ascii  CMP.B   #$39,D0             ; Is it in range of 0-9?
+                BLE     saSub30             ; It's a number
+                CMP.B   #$46,D0             ; Is is A...F?
+                BLE     saSub37             ; It's A...F
+                SUB.B   #$57,D0             ; It's a...f
+                BRA     saReturn            ; Go back
+saSub37         SUB.B   #$37,D0             ; Strip 37
+                BRA     saReturn            ; Go back
+saSub30         SUB.B   #$30,D0             ; Strip 30
+saReturn        RTS                         ; Go back
+
 *------------------------------------------------------------------------------
 * Variables and Constants -----------------------------------------------------
 *------------------------------------------------------------------------------
@@ -481,7 +536,11 @@ SR_PrintTab     LEA     DISP_TAB,A1
 CR              EQU     $0D                 ;Carriage Return
 LF              EQU     $0A                 ;Line feed
 
-MSG_WELCOME     DC.B    'Welcome message to display here.',CR,LF,0
+INPUT_BUFFER    EQU     $2000               ;Create an input buffer for ascii strings.
+INPUT_LOC       DS.L    1                   ;Location to read input data
+BOOL_FINISHED   DS.B    1                   ;Finished reading data
+
+MSG_PROMPT      DC.B    'Load data from location: ',0
 MSG_LINEBREAK   DC.B    CR,LF,0
 
 DISP_NOP        DC.B    'NOP',0
@@ -511,9 +570,8 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'E',0
                 DC.B    'F',0
 
-TERMINATE       SIMHALT                     ;Halt the simulator
-
                 END     START               ;Do not put anything below this line.
+
 
 *~Font name~Courier New~
 *~Font size~10~
