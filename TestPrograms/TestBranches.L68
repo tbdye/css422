@@ -1,0 +1,72 @@
+00007000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 2/28/2016 12:17:28 AM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Test Branches
+00000000                             3  * Written by : Thomas Dye
+00000000                             4  * Date       : 2/28/16
+00000000                             5  * Description: Test all banches with basic commands
+00000000                             6  *-----------------------------------------------------------
+00007000                             7  START   ORG     $7000
+00007000                             8  
+00007000                             9  * Put program code here
+00007000  D200                      10          ADD.B   D0,D1
+00007002  D0C0                      11          ADDA.W  D0,A0
+00007004  5200                      12          ADDI.B  #1,D0
+00007006  C200                      13          AND.B   D0,D1
+00007008  0200 0001                 14          ANDI.B  #1,D0
+0000700C  E300                      15          ASL.B   #1,D0
+0000700E  E200                      16          ASR.B   #1,D0
+00007010  6446                      17          BCC.B   test1
+00007012  0840 0001                 18  one     BCHG.L  #1,D0
+00007016  6E00 0042                 19          BGT     test2
+0000701A  6F00 0040                 20  two     BLE     test3    
+0000701E  4200                      21  three   CLR.B   D0
+00007020  B200                      22          CMP.B   D0,D1
+00007022  0C00 0001                 23          CMPI.B  #1,D0
+00007026  4641                      24          NOT.W   D1      ; Triggers OP_INVALID
+00007028  83FC 0001                 25          DIVS.W  #1,D1
+0000702C  4EB9 0000705E             26          JSR     test4   ; Triggers JSR, then RTS
+00007032  41F9 00007060             27          LEA     msg,A0
+00007038  E308                      28          LSL.B   #1,D0
+0000703A  E208                      29          LSR.B   #1,D0
+0000703C  1200                      30          MOVE.B  D0,D1
+0000703E  2200                      31          MOVE.L  D0,D1
+00007040  3200                      32          MOVE.W  D0,D1
+00007042  48A7 8000                 33          MOVEM.W D0,-(SP)
+00007046  7001                      34          MOVEQ.L #1,D0
+00007048  C3C0                      35          MULS.W  D0,D1
+0000704A  4E71                      36          NOP
+0000704C  E318                      37          ROL.B   #1,D0
+0000704E  E218                      38          ROR.B   #1,D0
+00007050  5300                      39          SUB.B   #1,D0
+00007052  5348                      40          SUBA.W  #1,A0
+00007054                            41  
+00007054  FFFF FFFF                 42          SIMHALT         ; halt simulator
+00007058                            43  
+00007058  60B8                      44  test1   BRA     one
+0000705A  60BE                      45  test2   BRA     two
+0000705C  60C0                      46  test3   BRA     three
+0000705E  4E75                      47  test4   RTS
+00007060                            48  
+00007060= 74 65 73 74 35 00         49  msg     DC.B    'test5',0
+00007066                            50  
+00007066                            51          END     START   ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+MSG                 7060
+ONE                 7012
+START               7000
+TEST1               7058
+TEST2               705A
+TEST3               705C
+TEST4               705E
+THREE               701E
+TWO                 701A
