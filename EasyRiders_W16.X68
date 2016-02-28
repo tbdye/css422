@@ -1,3 +1,16 @@
+
+Skip to content
+This repository
+
+    Pull requests
+    Issues
+    Gist
+
+    @Moonspeak721
+
+2
+0
+
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
@@ -459,7 +472,7 @@ deModeTable     JMP     deMode_000          ;0 - Register Direct Data
                 JMP     deMode_001          ;1 - Register Direct Address
                 JMP     deMode_010          ;2 - Register Indirect Address
                 JMP     deMode_011          ;3 - Register Indirect Address Post Inc
-                JMP     deMode_100          ;4 - Register Indirect Address Post Dec
+                JMP     deMode_100          ;4 - Register Indirect Address Pre Dec
                 JMP     deMode_101          ;5 - Not Supported
                 JMP     deMode_110          ;6 - Not Supported
                 JMP     deMode_111          ;7 - Absolute Data Short/Long/Immediate
@@ -471,31 +484,82 @@ deMode_000      MOVE.B  #26,D5
                 TRAP    #15
 
                 MULS    #2,D3
-                LEA 0(A4,D3),A1
+                LEA     0(A4,D3),A1
                 MOVE.B  #14,D0
                 TRAP    #15
+                
                 RTS
 
 *   1 - Register Direct Address
-deMode_001      RTS
+deMode_001      MOVE.B  #20, D5
+                LEA     0(A4,D5),A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MULS    #2,D3
+                LEA     0(A4,D3),A1
+                MOVE.B  #14,D0      *redundant (remove or keep for readability?)
+                TRAP    #15
+
+                RTS
 
 *   2 - Register Indirect Address
-deMode_010      RTS
+deMode_010      LEA     DISP_OPAREN,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                JSR     deMode_001
+                
+                LEA     CPAREN,A1
+                TRAP    #15
+
+                RTS
 
 *   3 - Register Indirect Address Post Inc
-deMode_011      RTS
+deMode_011      JSR     deMode_010
+                
+                LEA     DISP_PLUS,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                      
+                RTS
 
-*   4 - Register Indirect Address Post Dec
-deMode_100      RTS
+*   4 - Register Indirect Address Pre Dec
+deMode_100      LEA     DISP_MINUS,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                JSR     deMode_010
 
-*   5 - Not Supported
+                RTS
+
+*   5 - Not Supported 
+*   Should throw error
 deMode_101      RTS
 
 *   6 - Not Supported
+*   Should throw error
 deMode_110      RTS
 
 *   7 - Absolute Data Short/Long/Immediate
-deMode_111      RTS
+deMode_111      CMP.B   #0,D3
+                MOVEA.L A2,A3
+                BNE     001_Cmp
+                
+                *absolute data short
+                *read next word from memory, print in hex
+                LEA     DISP_DLR,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+
+001_Cmp         CMP.B   #1,D3
+                BNE     100_Cmp
+                
+100_Cmp
+
+
+                RTS
 
 * Evaluate Bits 3 to 0
 *---------------Opcode--Operands------------Comments---------------------------
@@ -623,6 +687,11 @@ DISP_MOVE       DC.B    'MOVE',0
 DISP_INVALID    DC.B    'INVALID',0
 DISP_SIMHALT    DC.B    'SIMHALT',0
 
+DISP_DLR        DC.B    '$',0
+DISP_MINUS      DC.B    '-',0
+DISP_PLUS       DC.B    '+',0
+DISP_OPAREN     DC.B    '(',0
+DISP_CPAREN     DC.B    ')',0
 DISP_TAB        DC.B    '   ',0
 DISP_COMMA      DC.B    ',',0
 DISP_SIZE_B     DC.B    '.B',0
@@ -654,3 +723,8 @@ TABLE_HEXCHAR   DC.B    '0',0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
+    Status API Training Shop Blog About Pricing 
+
+    © 2016 GitHub, Inc. Terms Privacy Security Contact Help 
+
