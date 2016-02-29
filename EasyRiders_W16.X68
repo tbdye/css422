@@ -555,6 +555,22 @@ deMode_111      MOVEA.L A2,A3
 absData_001     CMP.B   #1,D3
                 BNE     absData_100
                 
+                *absolute data long
+                *read next two words from memory, print in hex
+                LEA     DISP_DLR,A1
+                MOVE.B  #14,D0
+                TRAP    #15    
+                
+                ADDA.W  #2,A3
+                MOVE.L  (A3),D7
+                MOVE.B  #0,D5
+                
+                JSR     SR_PrintHex
+                
+                ADDA.W  #4,A2
+                
+                RTS
+                
 absData_100
 
                 RTS
