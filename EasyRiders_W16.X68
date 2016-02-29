@@ -1,16 +1,3 @@
-
-Skip to content
-This repository
-
-    Pull requests
-    Issues
-    Gist
-
-    @Moonspeak721
-
-2
-0
-
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
@@ -46,7 +33,8 @@ START           ORG     $1000               ;Load at this address
                 
 piLoop          CMPI.B  #30,LINECOUNT       ;Pause output if screen lines = 30
                 BEQ     FN_PauseOutput
-piReturn        JSR     SR_PrintAddr
+piReturn        CLR.L   D5                  ;Clear D5 before it is used in PrintHex
+                JSR     SR_PrintAddr
                 CLR.L   D7                  ;Clear existing opcode, if any exists
                 MOVE.W  (A2),D7             ;Load next opcode
                 MOVE.B  #12,D0              ;Prepare a shift of 12 bits
@@ -510,7 +498,7 @@ deMode_010      LEA     DISP_OPAREN,A1
                 
                 JSR     deMode_001
                 
-                LEA     CPAREN,A1
+                LEA     DISP_CPAREN,A1
                 TRAP    #15
 
                 RTS
@@ -542,22 +530,28 @@ deMode_101      RTS
 deMode_110      RTS
 
 *   7 - Absolute Data Short/Long/Immediate
-deMode_111      CMP.B   #0,D3
-                MOVEA.L A2,A3
-                BNE     001_Cmp
+deMode_111      MOVEA.L A2,A3
+                CMP.B   #0,D3
+                BNE     absData_001
                 
                 *absolute data short
                 *read next word from memory, print in hex
                 LEA     DISP_DLR,A1
                 MOVE.B  #14,D0
-                TRAP    #15
+                TRAP    #15    
+                
+                ADDA.W  #2,A3
+                MOVE.W  (A3),D7
+                MOVE.B  #16,D5
+                
+                JSR     SR_PrintHex
+                RTS
                 
 
-001_Cmp         CMP.B   #1,D3
-                BNE     100_Cmp
+absData_001     CMP.B   #1,D3
+                BNE     absData_100
                 
-100_Cmp
-
+absData_100
 
                 RTS
 
@@ -613,13 +607,21 @@ SR_Eval11to8    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 * Registers passed: A2
 * Return: Null
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintAddr    LEA     TABLE_HEXCHAR,A3    ;load constants and table into registers
-                MOVE.B  #0,D5        
-                MOVE.B  #28,D4              ;char shift
+SR_PrintAddr    MOVE.B  #28,D4              ;char shift
+                MOVE.W  A2,D7
+                JSR     SR_PrintHex
+                JSR     SR_PrintTab
+                RTS
+                              
+*Prints the hex number in D7
+*Number of digits = 32-D5/4
+*---------------Opcode--Operands------------Comments---------------------------
 
 *   Load the address to be printed into D6
-paLoop          MOVE.W  A2,D6
-        
+SR_PrintHex     LEA     TABLE_HEXCHAR, A3
+                MOVE.L  D7,D6                
+                MOVE.B  #28,D4
+ 
 *   Isolate nibble in D6 to be printed as a hex character
                 LSL.L   D5,D6        
                 LSR.L   D4,D6
@@ -635,8 +637,8 @@ paLoop          MOVE.W  A2,D6
 *   Increment loop counter by four, check if loop is done
                 ADD.B   #4,D5
                 CMP.B   #32,D5
-                BEQ     SR_PrintTab         ;Exits loop
-                BRA     paLoop
+                BNE     SR_PrintHex
+                RTS
                 
 * Add a tab to the end of a printed string, leave subroutine
 *---------------Opcode--Operands------------Comments---------------------------
@@ -673,7 +675,7 @@ LF              EQU     $0A                 ;Line feed
 
 INPUT_BUFFER    EQU     $2000               ;Create an input buffer for ascii strings.
 INPUT_LOC       DS.L    1                   ;Location to read input data
-BOOL_FINISHED   DS.B    1                   ;Finished reading data
+BOOL_FINISHED   DS.B    0                   ;Finished reading data
 LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
 
 MSG_PROMPT      DC.B    'Load data from location: ',0
@@ -727,4 +729,5 @@ TABLE_HEXCHAR   DC.B    '0',0
     Status API Training Shop Blog About Pricing 
 
     © 2016 GitHub, Inc. Terms Privacy Security Contact Help 
+
 
