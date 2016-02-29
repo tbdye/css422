@@ -6,6 +6,13 @@
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
 * Main
+* Register list:
+* A0: Root branch jump table (do not overwrite)
+* A1: Trap #15 Input and Output (subject to frequent overwrites)
+* A2: Current test opcode in use and sequence locator (advance sequence only)
+* D0: Trap #15 task switch (subject to frequent overwrites)
+* D1: Trap #15 string input (subject to frequent overwrites)
+* D7: Current test opcode workspace
 *---------------Opcode--Operands------------Comments---------------------------
 START           ORG     $1000               ;Load at this address
 
@@ -30,21 +37,26 @@ START           ORG     $1000               ;Load at this address
                 MOVEA.L INPUT_LOC,A2        ;Point to the location of input machine code
                 
                 MOVE.B  #0,LINECOUNT        ;Initialize counter to 0
+                MOVE.B  #0,BOOL_FINISHED    ;Initialize boolean to false
                 
 piLoop          CMPI.B  #30,LINECOUNT       ;Pause output if screen lines = 30
                 BEQ     FN_PauseOutput
-piReturn        CLR.L   D5                  ;Clear D5 before it is used in PrintHex
-                JSR     SR_PrintAddr
+                
+piReturn        JSR     SR_PrintAddr
+                ADDQ.B  #1,LINECOUNT        ;Increment screen line counter
+                
                 CLR.L   D7                  ;Clear existing opcode, if any exists
+                
                 MOVE.W  (A2),D7             ;Load next opcode
                 MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSR.W   D0,D7               ;Use shift to isolate bits for root branch
                 MULU    #6,D7               ;Form offset to travel on jump table 
                 JSR     0(A0,D7)            ;Jump to appropriate opcode, then return
+                
                 CMP.B   #1,BOOL_FINISHED    ;Check if end of input machine code has been reached
                 BEQ     TERMINATE           ;Exit the loop.
+                
                 ADDA    #2,A2               ;Advance to next opcode
-                ADDQ.B  #1,LINECOUNT        ;Increment screen line counter
                 BRA     piLoop 
 
 TERMINATE       SIMHALT                     ;Halt the simulator
@@ -75,6 +87,8 @@ ROOT_JMP_TABLE  JMP     BRANCH_0            ;$0 - Bit Manipulation/MOVEP/Immedia
 * First Level Branches - bits 11-8 --------------------------------------------
 *------------------------------------------------------------------------------
 * From Root to Branch 0
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval11to8 and SR_Eval7to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_0        JSR     SR_Eval11to8
 
@@ -95,6 +109,8 @@ BRANCH_0        JSR     SR_Eval11to8
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 4
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval11to8 and SR_Eval11to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4        JSR     SR_Eval11to8
                 
@@ -110,6 +126,8 @@ BRANCH_4        JSR     SR_Eval11to8
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 6
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval11to8)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_6        JSR     SR_Eval11to8
                 
@@ -123,6 +141,8 @@ BRANCH_6        JSR     SR_Eval11to8
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 8
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_8        JSR     SR_Eval8to6
                 
@@ -131,6 +151,8 @@ BRANCH_8        JSR     SR_Eval8to6
                 BRA     OP_DIVS             ;All other combinations
 
 * From Root to Branch 8
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_9        JSR     SR_Eval8to6
 
@@ -141,6 +163,8 @@ BRANCH_9        JSR     SR_Eval8to6
                 BRA     OP_SUB              ;All other combinations
 
 * From Root to Branch B
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_B        JSR     SR_Eval8to6
 
@@ -153,6 +177,8 @@ BRANCH_B        JSR     SR_Eval8to6
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch C
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_C        JSR     SR_Eval8to6
 
@@ -163,6 +189,8 @@ BRANCH_C        JSR     SR_Eval8to6
                 BRA     OP_AND              ;All other combinations
 
 * From Root to Branch D
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_D        JSR     SR_Eval8to6
 
@@ -173,6 +201,8 @@ BRANCH_D        JSR     SR_Eval8to6
                 BRA     OP_ADD              ;All other combinations
 
 * From Root to Branch E
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval8to3)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_E        JSR     SR_Eval8to3
 
@@ -192,6 +222,8 @@ BRANCH_F        BRA     OP_SIMHALT
 * Second Level Branches - bits 7-4 --------------------------------------------
 *------------------------------------------------------------------------------
 * From Branch 4 to Branch 4E
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval7to4 and SR_Eval7to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E       JSR     SR_Eval7to4
                 
@@ -208,6 +240,8 @@ BRANCH_4E       JSR     SR_Eval7to4
 * Third Level Branches - bits 3-0 ---------------------------------------------
 *------------------------------------------------------------------------------
 * From Branch 4E to Branch 4E7
+* Register list:
+* D7: Current test opcode workspace (set by SR_Eval3to0)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E7      JSR     SR_Eval3to0
 
@@ -221,6 +255,9 @@ BRANCH_4E7      JSR     SR_Eval3to0
 * Opcodes ---------------------------------------------------------------------
 *------------------------------------------------------------------------------
 * Add
+* Register list:
+* A1: Trap #15 Input and Output (subject to frequent overwrites)
+* D0: Trap #15 task switch (subject to frequent overwrites)
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ADD          LEA     DISP_ADD,A1
                 MOVE.B  #13,D0
@@ -228,6 +265,9 @@ OP_ADD          LEA     DISP_ADD,A1
                 RTS
 
 * Add Address
+* Register list:
+* A1: Trap #15 Input and Output (subject to frequent overwrites)
+* D0: Trap #15 task switch (subject to frequent overwrites)
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ADDA         LEA     DISP_ADDA,A1
                 MOVE.B  #13,D0
@@ -354,6 +394,12 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 LEA     MSG_LINEBREAK,A1
                 MOVE.B  #14,D0
                 TRAP    #15
+                
+                CLR.L   D2                  ;Clean up
+                CLR.L   D3
+                CLR.L   D4
+                CLR.L   D5
+                CLR.L   D6
                        
                 RTS
 
@@ -638,6 +684,8 @@ SR_PrintHex     LEA     TABLE_HEXCHAR, A3
                 ADD.B   #4,D5
                 CMP.B   #32,D5
                 BNE     SR_PrintHex
+                
+                CLR.L   D5                  ;Clear D5 before returning
                 RTS
                 
 * Add a tab to the end of a printed string, leave subroutine
@@ -674,9 +722,9 @@ CR              EQU     $0D                 ;Carriage Return
 LF              EQU     $0A                 ;Line feed
 
 INPUT_BUFFER    EQU     $2000               ;Create an input buffer for ascii strings.
-INPUT_LOC       DS.L    1                   ;Location to read input data
-BOOL_FINISHED   DS.B    0                   ;Finished reading data
+BOOL_FINISHED   DS.B    1                   ;Finished reading data
 LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
+INPUT_LOC       DS.L    1                   ;Location to read input data
 
 MSG_PROMPT      DC.B    'Load data from location: ',0
 MSG_PAUSE       DC.B    'Press enter to continue output.',0
@@ -697,8 +745,8 @@ DISP_CPAREN     DC.B    ')',0
 DISP_TAB        DC.B    '   ',0
 DISP_COMMA      DC.B    ',',0
 DISP_SIZE_B     DC.B    '.B',0
+DISP_SIZE_L     DC.B    '.L',0
 DISP_SIZE_W     DC.B    '.W',0
-DISP_SIZE_L     DC.B    '.W',0
 
 TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    '1',0
@@ -719,15 +767,7 @@ TABLE_HEXCHAR   DC.B    '0',0
 
                 END     START               ;Do not put anything below this line.
 
-
-
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
-
-    Status API Training Shop Blog About Pricing 
-
-    © 2016 GitHub, Inc. Terms Privacy Security Contact Help 
-
-
