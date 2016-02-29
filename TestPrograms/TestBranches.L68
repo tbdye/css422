@@ -1,58 +1,62 @@
 00007000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.04
-Created On: 2/28/2016 12:17:28 AM
+Created On: 2/29/2016 2:07:35 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Test Branches
 00000000                             3  * Written by : Thomas Dye
-00000000                             4  * Date       : 2/28/16
+00000000                             4  * Date       : 2/29/16
 00000000                             5  * Description: Test all banches with basic commands
 00000000                             6  *-----------------------------------------------------------
 00007000                             7  START   ORG     $7000
 00007000                             8  
 00007000                             9  * Put program code here
-00007000  D200                      10          ADD.B   D0,D1
-00007002  D0C0                      11          ADDA.W  D0,A0
-00007004  5200                      12          ADDI.B  #1,D0
-00007006  C200                      13          AND.B   D0,D1
-00007008  0200 0001                 14          ANDI.B  #1,D0
-0000700C  E300                      15          ASL.B   #1,D0
-0000700E  E200                      16          ASR.B   #1,D0
-00007010  6446                      17          BCC.B   test1
-00007012  0840 0001                 18  one     BCHG.L  #1,D0
-00007016  6E00 0042                 19          BGT     test2
-0000701A  6F00 0040                 20  two     BLE     test3    
-0000701E  4200                      21  three   CLR.B   D0
-00007020  B200                      22          CMP.B   D0,D1
-00007022  0C00 0001                 23          CMPI.B  #1,D0
-00007026  4641                      24          NOT.W   D1      ; Triggers OP_INVALID
-00007028  83FC 0001                 25          DIVS.W  #1,D1
-0000702C  4EB9 0000705E             26          JSR     test4   ; Triggers JSR, then RTS
-00007032  41F9 00007060             27          LEA     msg,A0
-00007038  E308                      28          LSL.B   #1,D0
-0000703A  E208                      29          LSR.B   #1,D0
-0000703C  1200                      30          MOVE.B  D0,D1
-0000703E  2200                      31          MOVE.L  D0,D1
-00007040  3200                      32          MOVE.W  D0,D1
-00007042  48A7 8000                 33          MOVEM.W D0,-(SP)
-00007046  7001                      34          MOVEQ.L #1,D0
-00007048  C3C0                      35          MULS.W  D0,D1
-0000704A  4E71                      36          NOP
-0000704C  E318                      37          ROL.B   #1,D0
-0000704E  E218                      38          ROR.B   #1,D0
-00007050  5300                      39          SUB.B   #1,D0
-00007052  5348                      40          SUBA.W  #1,A0
-00007054                            41  
-00007054  FFFF FFFF                 42          SIMHALT         ; halt simulator
-00007058                            43  
-00007058  60B8                      44  test1   BRA     one
-0000705A  60BE                      45  test2   BRA     two
-0000705C  60C0                      46  test3   BRA     three
-0000705E  4E75                      47  test4   RTS
-00007060                            48  
-00007060= 74 65 73 74 35 00         49  msg     DC.B    'test5',0
-00007066                            50  
-00007066                            51          END     START   ; last line of source
+00007000  D200                      10          ADD.B   D0,D1       ; D200 - ADD
+00007002  D0C0                      11          ADDA.W  D0,A0       ; D0C0 - ADDA
+00007004  5200                      12          ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
+00007006  0600 00FF                 13          ADDI.B  #$FF,D0     ; 0600 00FF - ADDI
+0000700A  C200                      14          AND.B   D0,D1       ; C200 - AND
+0000700C  0200 0001                 15          ANDI.B  #1,D0       ; 0200 0001 - ANDI
+00007010  E300                      16          ASL.B   #1,D0       ; E300 - SHIFT_ROT
+00007012  E200                      17          ASR.B   #1,D0       ; E200 - SHIFT_ROT
+00007014  6450                      18          BCC.B   test1       ; 6446 - BCC
+00007016  0840 0001                 19  one     BCHG.L  #1,D0       ; 0840 0001 - BIT_OP
+0000701A  6E00 004C                 20          BGT     test2       ; 6E00 0042 - BCC
+0000701E  6F00 004A                 21  two     BLE     test3       ; 6F00 0040 - BCC
+00007022  4200                      22  three   CLR.B   D0          ; 4200 - CLR
+00007024  B200                      23          CMP.B   D0,D1       ; B200 - CMP
+00007026  0C00 0001                 24          CMPI.B  #1,D0       ; 0C00 0001 - CMPI
+0000702A  4641                      25          NOT.W   D1          ; 4641 - NOT (Triggers OP_INVALID)
+0000702C  83FC 0001                 26          DIVS.W  #1,D1       ; 83FC 0001 - DIVS
+00007030  4EB9 0000706C             27          JSR     test4       ; 4EB9 0000705E - JSR
+00007036  41F9 0000706E             28          LEA     msg,A0      ; 41F9 00007060 - LEA
+0000703C  E308                      29          LSL.B   #1,D0       ; E308 - SHIFT_ROT
+0000703E  E208                      30          LSR.B   #1,D0       ; E208 - SHIFT_ROT
+00007040  1200                      31          MOVE.B  D0,D1       ; 1200 - MOVEB
+00007042  2200                      32          MOVE.L  D0,D1       ; 2200 - MOVEL
+00007044  3200                      33          MOVE.W  D0,D1       ; 3200 - MOVEW
+00007046  48A7 8000                 34          MOVEM.W D0,-(SP)    ; 48A7 8000 - MOVEM_TO_EA
+0000704A  7001                      35          MOVEQ.L #1,D0       ; 7001 - MOVEQ
+0000704C  C3C0                      36          MULS.W  D0,D1       ; C3C0 - MULS
+0000704E  4E71                      37          NOP                 ; 4E71 - NOP
+00007050  E318                      38          ROL.B   #1,D0       ; E318 - SHIFT_ROT
+00007052  E218                      39          ROR.B   #1,D0       ; E218 - SHIFT_ROT
+00007054  5300                      40          SUB.B   #1,D0       ; 5300 - SUBQ (need to add)
+00007056  0400 00FF                 41          SUB.B   #$FF,D0     ; 0040 00FF - SUBI (need to add)
+0000705A  9200                      42          SUB.B   D0,D1       ; 9200 - SUB
+0000705C  5348                      43          SUBA.W  #1,A0       ; 5348 - SUBQ
+0000705E  90FC 00FF                 44          SUBA.W  #$FF,A0     ; 90FC - SUBA
+00007062                            45  
+00007062  FFFF FFFF                 46          SIMHALT             ; halt simulator
+00007066                            47  
+00007066  60AE                      48  test1   BRA     one
+00007068  60B4                      49  test2   BRA     two
+0000706A  60B6                      50  test3   BRA     three
+0000706C  4E75                      51  test4   RTS
+0000706E                            52  
+0000706E= 74 65 73 74 35 00         53  msg     DC.B    'test5',0
+00007074                            54  
+00007074                            55          END     START       ; last line of source
 
 No errors detected
 No warnings generated
@@ -61,12 +65,12 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-MSG                 7060
-ONE                 7012
+MSG                 706E
+ONE                 7016
 START               7000
-TEST1               7058
-TEST2               705A
-TEST3               705C
-TEST4               705E
-THREE               701E
-TWO                 701A
+TEST1               7066
+TEST2               7068
+TEST3               706A
+TEST4               706C
+THREE               7022
+TWO                 701E
