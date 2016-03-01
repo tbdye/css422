@@ -1,0 +1,52 @@
+00007000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 2/29/2016 4:24:29 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Test ADD
+00000000                             3  * Written by : Thomas Dye
+00000000                             4  * Date       : 2/29/2016
+00000000                             5  * Description: Test basic functionality of ADD opcode.
+00000000                             6  *-----------------------------------------------------------
+00007000                             7          ORG     $7000
+00007000                             8  START:
+00007000                             9  
+00007000                            10  * Test Size (also tests Dn as dest and Dn as src)
+00007000  D007                      11          ADD.B  D7,D0           ;test01 size byte
+00007002  D246                      12          ADD.W  D6,D1           ;test02 size word
+00007004  D485                      13          ADD.L  D5,D2           ;test03 size long 
+00007006                            14      
+00007006                            15  * Test Destination EA
+00007006  D310                      16          ADD.B  D1,(A0)         ;test04 dest (An)
+00007008  D318                      17          ADD.B  D1,(A0)+        ;test05 dest (An)+
+0000700A  D320                      18          ADD.B  D1,-(A0)        ;test06 dest -(An)
+0000700C  D338 42A6                 19          ADD.B  D1,$42A6        ;test07 dest (xxx).W
+00007010  D339 0000A000             20          ADD.B  D1,$0000A000    ;test08 dest (xxx).L
+00007016                            21  
+00007016                            22  * Test Source EA
+00007016  D249                      23          ADD.W  A1,D1           ;test09 src An
+00007018  D211                      24          ADD.B  (A1),D1         ;test10 src (An)
+0000701A  D219                      25          ADD.B  (A1)+,D1        ;test11 src (An)+
+0000701C  D221                      26          ADD.B  -(A1),D1        ;test12 src -(An)
+0000701E  D278 42A6                 27          ADD.W  $42A6,D1        ;test13 src (xxx).W
+00007022  D2B9 0000A000             28          ADD.L  $0000A000,D1    ;test14 src (xxx).L
+00007028                            29          
+00007028                            30  * Tricky
+00007028  D638 4340                 31          ADD.B  $00004340,D3    ;test15
+0000702C  D639 0000A340             32          ADD.B  $A340,D3        ;test16
+00007032  D638 A340                 33          ADD.B  $FFFFA340,D3    ;test17
+00007036  D639 FFFF4340             34          ADD.B  $FFFF4340,D3    ;test18
+0000703C  D679 0000A340             35          ADD.W  $A340,D3        ;test19
+00007042                            36          
+00007042  FFFF FFFF                 37          SIMHALT                 ;halt simulator
+00007046                            38  
+00007046                            39          END     START           ;last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+START               7000
