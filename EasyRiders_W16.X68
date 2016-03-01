@@ -310,11 +310,17 @@ BRANCH_4E7      JSR     SR_Eval3to0
 * Add
 * Register list:
 * A1: Trap #15 Input and Output (subject to frequent overwrites)
+* A2: Current test opcode in use and sequence locator (sequence as necessary)
 * D0: Trap #15 task switch (subject to frequent overwrites)
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADD          LEA     DISP_ADD,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_ADD          LEA     DISP_ADD,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+                JSR     SR_Eval8to6         ;Get bits for OPMODE to display size
+                
+                JSR     SR_PrintSize
+                
                 RTS
 
 * Add Address
@@ -872,6 +878,25 @@ SR_PrintHex     LEA     TABLE_HEXCHAR, A3
                 
                 CLR.L   D5                  ;Clear D5 before returning
                 RTS
+
+* Print .B, .W, or .L immediately after the opcode.
+*---------------Opcode--Operands------------Comments---------------------------
+SR_PrintSize    MOVEM.L D0-D7,-(SP)         ;Move registers to stack
+                MOVE.L  D7,D0               ;Create additional copies of bits for evaluations
+                MOVE.L  D7,D1
+                ANDI.B  #%000,D0            ;Mask for Byte
+                ANDI.B  #%001,D1            ;Mask for Word
+                ANDI.B  #%010,D7            ;Mask for Long
+                
+                CMP.B   #0,D0
+                BEQ     FN_PrintSizeB       ;%x00
+                CMP.B   #1,D1
+                BEQ     FN_PrintSizeW       ;%x01
+                CMP.B   #2,D7
+                BEQ     FN_PrintSizeL       '%x10
+                
+                MOVEM.L (SP)+,D0-D7         ;Move registers from stack
+                RTS
                 
 * Add a tab to the end of a printed string, leave subroutine
 *---------------Opcode--Operands------------Comments---------------------------
@@ -979,6 +1004,7 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
+
 
 
 
