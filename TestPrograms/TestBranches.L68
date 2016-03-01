@@ -1,6 +1,6 @@
 00007000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.04
-Created On: 2/29/2016 2:07:35 PM
+Created On: 2/29/2016 4:01:08 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Test Branches
@@ -45,7 +45,7 @@ Created On: 2/29/2016 2:07:35 PM
 00007056  0400 00FF                 41          SUB.B   #$FF,D0     ; 0040 00FF - SUBI (need to add)
 0000705A  9200                      42          SUB.B   D0,D1       ; 9200 - SUB
 0000705C  5348                      43          SUBA.W  #1,A0       ; 5348 - SUBQ
-0000705E  90FC 00FF                 44          SUBA.W  #$FF,A0     ; 90FC - SUBA
+0000705E  90FC 00FF                 44          SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
 00007062                            45  
 00007062  FFFF FFFF                 46          SIMHALT             ; halt simulator
 00007066                            47  

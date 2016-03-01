@@ -41,7 +41,7 @@ three   CLR.B   D0          ; 4200 - CLR
         SUB.B   #$FF,D0     ; 0040 00FF - SUBI (need to add)
         SUB.B   D0,D1       ; 9200 - SUB
         SUBA.W  #1,A0       ; 5348 - SUBQ
-        SUBA.W  #$FF,A0     ; 90FC - SUBA
+        SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
 
         SIMHALT             ; halt simulator
 
@@ -53,6 +53,7 @@ test4   RTS
 msg     DC.B    'test5',0
 
         END     START       ; last line of source
+
 
 
 
