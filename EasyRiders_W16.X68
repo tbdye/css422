@@ -97,6 +97,8 @@ BRANCH_0        JSR     SR_Eval11to8
                 BEQ     OP_ANDI             ;$2
                 CMP.B   #$6,D7
                 BEQ     OP_ADDI             ;$3
+                CMP.B   #$4,D7
+                BEQ     OP_SUBI             ;$4
                 CMP.B   #$8,D7
                 BEQ     OP_BCHG             ;$8
                 CMP.B   #$C,D7
@@ -123,8 +125,17 @@ BRANCH_4        JSR     SR_Eval11to8
                 CMP.B   #$E,D7
                 BEQ     BRANCH_4E           ;$E
                 
-                BEQ     SR_Eval11to6
+                
+                JSR     SR_Eval11to6
+                ANDI.B  #%00100010,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00100010,D7
                 BEQ     OP_MOVEM            ;%1x001x
+                
+                JSR     SR_Eval11to6
+                ANDI.B  #%00000111,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00000111,D7
                 BEQ     OP_LEA              ;%xxx111
                 
                 BRA     OP_INVALID          ;No matches found
@@ -136,10 +147,10 @@ BRANCH_4        JSR     SR_Eval11to8
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_5        MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
-                BTST    #8,D7               ;Bit 8 = 0
-                BEQ     OP_ADDQ
-                BTST    #8,D7               ;Bit 8 = 1
-                BNE     OP_SUBQ
+                BTST    #8,D7
+                BEQ     OP_ADDQ             ;Bit 8 = 0
+                BTST    #8,D7
+                BNE     OP_SUBQ             ;Bit 8 = 1
                 
                 BRA     OP_INVALID          ;No matches found
 
@@ -167,8 +178,9 @@ BRANCH_6        JSR     SR_Eval11to8
 BRANCH_8        JSR     SR_Eval8to6
                 
                 CMP.B   #%111,D7
-                BEQ     OP_INVALID          ;%111 - Op not supported
-                BRA     OP_DIVS             ;All other combinations
+                BEQ     OP_DIVS             ;%111
+                
+                BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 8
 * Register list:
@@ -181,6 +193,7 @@ BRANCH_9        JSR     SR_Eval8to6
                 BEQ     OP_SUBA             ;%011
                 CMP.B   #%111,D7
                 BEQ     OP_SUBA             ;%111
+                
                 BRA     OP_SUB              ;All other combinations
 
 * From Root to Branch B
@@ -196,6 +209,7 @@ BRANCH_B        JSR     SR_Eval8to6
                 BEQ     OP_CMP              ;%001
                 CMP.B   #%010,D7
                 BEQ     OP_CMP              ;%010
+                
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch C
@@ -209,6 +223,7 @@ BRANCH_C        JSR     SR_Eval8to6
                 BEQ     OP_INVALID          ;%011 - Op not supported
                 CMP.B   #%111,D7
                 BEQ     OP_MULS             ;%111
+                
                 BRA     OP_AND              ;All other combinations
 
 * From Root to Branch D
@@ -222,6 +237,7 @@ BRANCH_D        JSR     SR_Eval8to6
                 BEQ     OP_ADDA             ;%011
                 CMP.B   #%111,D7
                 BEQ     OP_ADDA             ;%111
+                
                 BRA     OP_ADD              ;All other combinations
 
 * From Root to Branch E
@@ -230,13 +246,21 @@ BRANCH_D        JSR     SR_Eval8to6
 * D7: Current test opcode workspace (set by SR_Eval8to3)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_E        JSR     SR_Eval8to3
-
+                ANDI.B  #%00100011,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00000000,D7
                 BEQ     OP_ASR              ;%0xxx00
+                CMP.B   #%00000001,D7
                 BEQ     OP_LSR              ;%0xxx01
+                CMP.B   #%00000011,D7
                 BEQ     OP_ROR              ;%0xxx11
+                CMP.B   #%00100000,D7
                 BEQ     OP_ASL              ;%1xxx00
+                CMP.B   #%00100001,D7
                 BEQ     OP_LSL              ;%1xxx01
+                CMP.B   #%00100011,D7
                 BEQ     OP_ROL              ;%1xxx11
+                
                 BRA     OP_INVALID
 
 * From Root to Branch F
@@ -260,6 +284,7 @@ BRANCH_4E       JSR     SR_Eval7to4
                 
                 CMP.B   #%10,D7
                 BEQ     OP_JSR              ;%10
+                
                 BRA     OP_INVALID          ;No matches found
             
 *------------------------------------------------------------------------------
@@ -276,6 +301,7 @@ BRANCH_4E7      JSR     SR_Eval3to0
                 BEQ     OP_NOP              ;$1
                 CMP.B   #$5,D7
                 BEQ     OP_RTS              ;$5
+                
                 BRA     OP_INVALID          ;No matches found
 
 *------------------------------------------------------------------------------
@@ -588,7 +614,8 @@ OP_SUB          LEA     DISP_SUB,A1
 
 * Subtract Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUBA         LEA     DISP_SUBA,A1
+OP_SUBA         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_SUBA,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
@@ -793,7 +820,11 @@ SR_Eval8to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 11 to 6
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval11to6    RTS
+SR_Eval11to6    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
+                LSL.W   #4,D7               ;Truncate up to bit 11
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 11 to 8
 *---------------Opcode--Operands------------Comments---------------------------
@@ -948,6 +979,7 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
+
 
 
 *~Font name~Courier New~
