@@ -796,7 +796,8 @@ absData_001     CMP.B   #1,D3
                 
                 RTS
                 
-absData_100
+absData_100     *immediate data
+                *figure out how long the current commad is
 
                 RTS
 
@@ -860,7 +861,8 @@ SR_Eval11to8    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 * Registers passed: A2
 * Return: Null
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintAddr    MOVE.B  #28,D4              ;char shift
+SR_PrintAddr    CLR     D5
+                MOVE.B  #28,D4              ;char shift
                 MOVE.W  A2,D7
                 JSR     SR_PrintHex
                 JSR     SR_PrintTab
@@ -999,8 +1001,6 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
-
-
 
 
 
