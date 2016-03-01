@@ -796,7 +796,8 @@ absData_001     CMP.B   #1,D3
                 
                 RTS
                 
-absData_100
+absData_100     *immediate data
+                *figure out how long the current commad is
 
                 RTS
 
@@ -826,11 +827,7 @@ SR_Eval7to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 8 to 3
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval8to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #10,D0              ;Prepare a shift of 12 bits
-                LSL.W   #7,D7               ;Truncate up to bit 8
-                LSR.W   D0,D7               ;Isolate remainder
-                RTS
+SR_Eval8to3     RTS
 
 * Evaluate Bits 8 to 6
 *---------------Opcode--Operands------------Comments---------------------------
@@ -842,11 +839,7 @@ SR_Eval8to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 11 to 6
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval11to6    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
-                LSL.W   #4,D7               ;Truncate up to bit 11
-                LSR.W   D0,D7               ;Isolate remainder
-                RTS
+SR_Eval11to6    RTS
 
 * Evaluate Bits 11 to 8
 *---------------Opcode--Operands------------Comments---------------------------
@@ -860,7 +853,8 @@ SR_Eval11to8    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 * Registers passed: A2
 * Return: Null
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintAddr    MOVE.B  #28,D4              ;char shift
+SR_PrintAddr    CLR     D5
+                MOVE.B  #28,D4              ;char shift
                 MOVE.W  A2,D7
                 JSR     SR_PrintHex
                 JSR     SR_PrintTab
@@ -999,8 +993,6 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
-
-
 
 
 
