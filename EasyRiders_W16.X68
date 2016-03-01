@@ -532,7 +532,8 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 CLR.L   D6
                        
                 RTS
-
+                
+    BRA     OP_INVALID
 * Move Data from Source to Destination - Long
 *---------------Opcode--Operands------------Comments---------------------------
 OP_MOVE_L       LEA     DISP_MOVE,A1
@@ -635,6 +636,7 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 TRAP    #15
                 RTS
 
+
 *------------------------------------------------------------------------------
 * Functions -------------------------------------------------------------------
 *------------------------------------------------------------------------------
@@ -675,6 +677,7 @@ athEndLoop      MOVE.L  D1,D7               ; Return hex number in D7
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Decode_EA    LEA     deModeTable,A3
                 LEA     TABLE_HEXCHAR,A4
+                MULU    #6,D2
                 JSR     0(A3,D2)
                 RTS
                 
@@ -694,7 +697,7 @@ deMode_000      MOVE.B  #26,D5
                 MOVE.B  #14,D0
                 TRAP    #15
 
-                MULS    #2,D3
+                MULU    #2,D3
                 LEA     0(A4,D3),A1
                 MOVE.B  #14,D0
                 TRAP    #15
@@ -707,7 +710,7 @@ deMode_001      MOVE.B  #20, D5
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                MULS    #2,D3
+                MULU    #2,D3
                 LEA     0(A4,D3),A1
                 MOVE.B  #14,D0      *redundant (remove or keep for readability?)
                 TRAP    #15
@@ -768,11 +771,30 @@ deMode_111      MOVEA.L A2,A3
                 MOVE.B  #16,D5
                 
                 JSR     SR_PrintHex
+                
+                ADDA.W  #2,A2
+                
                 RTS
                 
 
 absData_001     CMP.B   #1,D3
                 BNE     absData_100
+                
+                *absolute data long
+                *read next two words from memory, print in hex
+                LEA     DISP_DOLLAR,A1
+                MOVE.B  #14,D0
+                TRAP    #15    
+                
+                ADDA.W  #2,A3
+                MOVE.L  (A3),D7
+                MOVE.B  #0,D5
+                
+                JSR     SR_PrintHex
+                
+                ADDA.W  #4,A2
+                
+                RTS
                 
 absData_100
 
@@ -869,8 +891,6 @@ SR_PrintHex     LEA     TABLE_HEXCHAR, A3
                 ADD.B   #4,D5
                 CMP.B   #32,D5
                 BNE     SR_PrintHex
-                
-                CLR.L   D5                  ;Clear D5 before returning
                 RTS
                 
 * Add a tab to the end of a printed string, leave subroutine
@@ -982,7 +1002,14 @@ TABLE_HEXCHAR   DC.B    '0',0
 
 
 
+
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
-*~Tab size~4~
+*~Tab size~4~    Status API Training Shop Blog About Pricing 
+
+    © 2016 GitHub, Inc. Terms Privacy Security Contact Help 
+
+
+
