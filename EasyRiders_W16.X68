@@ -827,7 +827,11 @@ SR_Eval7to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 8 to 3
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval8to3     RTS
+SR_Eval8to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #10,D0              ;Prepare a shift of 12 bits
+                LSL.W   #7,D7               ;Truncate up to bit 8
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 8 to 6
 *---------------Opcode--Operands------------Comments---------------------------
@@ -839,7 +843,11 @@ SR_Eval8to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 11 to 6
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval11to6    RTS
+SR_Eval11to6    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
+                LSL.W   #4,D7               ;Truncate up to bit 11
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 11 to 8
 *---------------Opcode--Operands------------Comments---------------------------
