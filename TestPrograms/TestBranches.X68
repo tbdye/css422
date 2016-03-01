@@ -1,45 +1,49 @@
 *-----------------------------------------------------------
 * Title      : Test Branches
 * Written by : Thomas Dye
-* Date       : 2/28/16
+* Date       : 2/29/16
 * Description: Test all banches with basic commands
 *-----------------------------------------------------------
 START   ORG     $7000
 
 * Put program code here
-        ADD.B   D0,D1
-        ADDA.W  D0,A0
-        ADDI.B  #1,D0
-        AND.B   D0,D1
-        ANDI.B  #1,D0
-        ASL.B   #1,D0
-        ASR.B   #1,D0
-        BCC.B   test1
-one     BCHG.L  #1,D0
-        BGT     test2
-two     BLE     test3    
-three   CLR.B   D0
-        CMP.B   D0,D1
-        CMPI.B  #1,D0
-        NOT.W   D1      ; Triggers OP_INVALID
-        DIVS.W  #1,D1
-        JSR     test4   ; Triggers JSR, then RTS
-        LEA     msg,A0
-        LSL.B   #1,D0
-        LSR.B   #1,D0
-        MOVE.B  D0,D1
-        MOVE.L  D0,D1
-        MOVE.W  D0,D1
-        MOVEM.W D0,-(SP)
-        MOVEQ.L #1,D0
-        MULS.W  D0,D1
-        NOP
-        ROL.B   #1,D0
-        ROR.B   #1,D0
-        SUB.B   #1,D0
-        SUBA.W  #1,A0
+        ADD.B   D0,D1       ; D200 - ADD
+        ADDA.W  D0,A0       ; D0C0 - ADDA
+        ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
+        ADDI.B  #$FF,D0     ; 0600 00FF - ADDI
+        AND.B   D0,D1       ; C200 - AND
+        ANDI.B  #1,D0       ; 0200 0001 - ANDI
+        ASL.B   #1,D0       ; E300 - SHIFT_ROT
+        ASR.B   #1,D0       ; E200 - SHIFT_ROT
+        BCC.B   test1       ; 6446 - BCC
+one     BCHG.L  #1,D0       ; 0840 0001 - BIT_OP
+        BGT     test2       ; 6E00 0042 - BCC
+two     BLE     test3       ; 6F00 0040 - BCC
+three   CLR.B   D0          ; 4200 - CLR
+        CMP.B   D0,D1       ; B200 - CMP
+        CMPI.B  #1,D0       ; 0C00 0001 - CMPI
+        NOT.W   D1          ; 4641 - NOT (Triggers OP_INVALID)
+        DIVS.W  #1,D1       ; 83FC 0001 - DIVS
+        JSR     test4       ; 4EB9 0000705E - JSR
+        LEA     msg,A0      ; 41F9 00007060 - LEA
+        LSL.B   #1,D0       ; E308 - SHIFT_ROT
+        LSR.B   #1,D0       ; E208 - SHIFT_ROT
+        MOVE.B  D0,D1       ; 1200 - MOVEB
+        MOVE.L  D0,D1       ; 2200 - MOVEL
+        MOVE.W  D0,D1       ; 3200 - MOVEW
+        MOVEM.W D0,-(SP)    ; 48A7 8000 - MOVEM_TO_EA
+        MOVEQ.L #1,D0       ; 7001 - MOVEQ
+        MULS.W  D0,D1       ; C3C0 - MULS
+        NOP                 ; 4E71 - NOP
+        ROL.B   #1,D0       ; E318 - SHIFT_ROT
+        ROR.B   #1,D0       ; E218 - SHIFT_ROT
+        SUB.B   #1,D0       ; 5300 - SUBQ (need to add)
+        SUB.B   #$FF,D0     ; 0040 00FF - SUBI (need to add)
+        SUB.B   D0,D1       ; 9200 - SUB
+        SUBA.W  #1,A0       ; 5348 - SUBQ
+        SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
 
-        SIMHALT         ; halt simulator
+        SIMHALT             ; halt simulator
 
 test1   BRA     one
 test2   BRA     two
@@ -48,7 +52,10 @@ test4   RTS
 
 msg     DC.B    'test5',0
 
-        END     START   ; last line of source
+        END     START       ; last line of source
+
+
+
 
 
 

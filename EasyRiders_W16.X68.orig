@@ -635,7 +635,10 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/ross-leap-day
 
 *------------------------------------------------------------------------------
 * Functions -------------------------------------------------------------------
@@ -999,8 +1002,6 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
-
-
 
 
 
