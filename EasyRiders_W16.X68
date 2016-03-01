@@ -56,7 +56,7 @@ piReturn        JSR     SR_PrintAddr
                 CMP.B   #1,BOOL_FINISHED    ;Check if end of input machine code has been reached
                 BEQ     TERMINATE           ;Exit the loop.
                 
-                ADDA    #2,A2               ;Advance to next opcode
+                ADDA.W  #2,A2               ;Advance to next opcode
                 BRA     piLoop 
 
 TERMINATE       SIMHALT                     ;Halt the simulator
@@ -71,7 +71,7 @@ ROOT_JMP_TABLE  JMP     BRANCH_0            ;$0 - Bit Manipulation/MOVEP/Immedia
                 JMP     OP_MOVE_L           ;$2 - Move Long
                 JMP     OP_MOVE_W           ;$3 - Move Word
                 JMP     BRANCH_4            ;$4 - Miscellaneous
-                JMP     OP_INVALID          ;$5 - ADDQ/SUBQ/Scc/DBcc/TRAPc c
+                JMP     BRANCH_5            ;$5 - ADDQ/SUBQ/Scc/DBcc/TRAPc c
                 JMP     BRANCH_6            ;$6 - Bcc/BSR/BRA
                 JMP     OP_MOVEQ            ;$7 - MOVEQ
                 JMP     BRANCH_8            ;$8 - OR/DIV/SBCD
@@ -88,14 +88,17 @@ ROOT_JMP_TABLE  JMP     BRANCH_0            ;$0 - Bit Manipulation/MOVEP/Immedia
 *------------------------------------------------------------------------------
 * From Root to Branch 0
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval11to8 and SR_Eval7to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_0        JSR     SR_Eval11to8
 
-                CMP.B   #$0,D7
-                BEQ     OP_ANDI             ;$0
-                CMP.B   #$3,D7
+                CMP.B   #$2,D7
+                BEQ     OP_ANDI             ;$2
+                CMP.B   #$6,D7
                 BEQ     OP_ADDI             ;$3
+                CMP.B   #$4,D7
+                BEQ     OP_SUBI             ;$4
                 CMP.B   #$8,D7
                 BEQ     OP_BCHG             ;$8
                 CMP.B   #$C,D7
@@ -110,23 +113,50 @@ BRANCH_0        JSR     SR_Eval11to8
 
 * From Root to Branch 4
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval11to8 and SR_Eval11to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4        JSR     SR_Eval11to8
                 
                 CMP.B   #$2,D7
                 BEQ     OP_CLR              ;$2
+                CMP.B   #$4,D7
+                BEQ     OP_SUBI             ;$4
                 CMP.B   #$E,D7
                 BEQ     BRANCH_4E           ;$E
                 
-                BEQ     SR_Eval11to6
+                
+                JSR     SR_Eval11to6
+                ANDI.B  #%00100010,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00100010,D7
                 BEQ     OP_MOVEM            ;%1x001x
+                
+                JSR     SR_Eval11to6
+                ANDI.B  #%00000111,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00000111,D7
                 BEQ     OP_LEA              ;%xxx111
+                
+                BRA     OP_INVALID          ;No matches found
+
+* From Root to Branch 5
+* Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
+* D7: Current test opcode workspace
+*---------------Opcode--Operands------------Comments---------------------------
+BRANCH_5        MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+
+                BTST    #8,D7
+                BEQ     OP_ADDQ             ;Bit 8 = 0
+                BTST    #8,D7
+                BNE     OP_SUBQ             ;Bit 8 = 1
                 
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 6
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval11to8)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_6        JSR     SR_Eval11to8
@@ -142,16 +172,19 @@ BRANCH_6        JSR     SR_Eval11to8
 
 * From Root to Branch 8
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_8        JSR     SR_Eval8to6
                 
                 CMP.B   #%111,D7
-                BEQ     OP_INVALID          ;%111 - Op not supported
-                BRA     OP_DIVS             ;All other combinations
+                BEQ     OP_DIVS             ;%111
+                
+                BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 8
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_9        JSR     SR_Eval8to6
@@ -160,10 +193,12 @@ BRANCH_9        JSR     SR_Eval8to6
                 BEQ     OP_SUBA             ;%011
                 CMP.B   #%111,D7
                 BEQ     OP_SUBA             ;%111
+                
                 BRA     OP_SUB              ;All other combinations
 
 * From Root to Branch B
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_B        JSR     SR_Eval8to6
@@ -174,10 +209,12 @@ BRANCH_B        JSR     SR_Eval8to6
                 BEQ     OP_CMP              ;%001
                 CMP.B   #%010,D7
                 BEQ     OP_CMP              ;%010
+                
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch C
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_C        JSR     SR_Eval8to6
@@ -186,10 +223,12 @@ BRANCH_C        JSR     SR_Eval8to6
                 BEQ     OP_INVALID          ;%011 - Op not supported
                 CMP.B   #%111,D7
                 BEQ     OP_MULS             ;%111
+                
                 BRA     OP_AND              ;All other combinations
 
 * From Root to Branch D
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_D        JSR     SR_Eval8to6
@@ -198,20 +237,30 @@ BRANCH_D        JSR     SR_Eval8to6
                 BEQ     OP_ADDA             ;%011
                 CMP.B   #%111,D7
                 BEQ     OP_ADDA             ;%111
+                
                 BRA     OP_ADD              ;All other combinations
 
 * From Root to Branch E
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to3)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_E        JSR     SR_Eval8to3
-
+                ANDI.B  #%00100011,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00000000,D7
                 BEQ     OP_ASR              ;%0xxx00
+                CMP.B   #%00000001,D7
                 BEQ     OP_LSR              ;%0xxx01
+                CMP.B   #%00000011,D7
                 BEQ     OP_ROR              ;%0xxx11
+                CMP.B   #%00100000,D7
                 BEQ     OP_ASL              ;%1xxx00
+                CMP.B   #%00100001,D7
                 BEQ     OP_LSL              ;%1xxx01
+                CMP.B   #%00100011,D7
                 BEQ     OP_ROL              ;%1xxx11
+                
                 BRA     OP_INVALID
 
 * From Root to Branch F
@@ -223,6 +272,7 @@ BRANCH_F        BRA     OP_SIMHALT
 *------------------------------------------------------------------------------
 * From Branch 4 to Branch 4E
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval7to4 and SR_Eval7to6)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E       JSR     SR_Eval7to4
@@ -234,6 +284,7 @@ BRANCH_4E       JSR     SR_Eval7to4
                 
                 CMP.B   #%10,D7
                 BEQ     OP_JSR              ;%10
+                
                 BRA     OP_INVALID          ;No matches found
             
 *------------------------------------------------------------------------------
@@ -241,6 +292,7 @@ BRANCH_4E       JSR     SR_Eval7to4
 *------------------------------------------------------------------------------
 * From Branch 4E to Branch 4E7
 * Register list:
+* A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval3to0)
 *---------------Opcode--Operands------------Comments---------------------------
 BRANCH_4E7      JSR     SR_Eval3to0
@@ -249,6 +301,7 @@ BRANCH_4E7      JSR     SR_Eval3to0
                 BEQ     OP_NOP              ;$1
                 CMP.B   #$5,D7
                 BEQ     OP_RTS              ;$5
+                
                 BRA     OP_INVALID          ;No matches found
 
 *------------------------------------------------------------------------------
@@ -276,78 +329,155 @@ OP_ADDA         LEA     DISP_ADDA,A1
 
 * Add Immediate
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDI         BRA     OP_INVALID
+OP_ADDI         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_ADDI,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
+
+* Add Quick
+*---------------Opcode--Operands------------Comments---------------------------
+OP_ADDQ         LEA     DISP_ADDQ,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * AND Logical
 *---------------Opcode--Operands------------Comments---------------------------
-OP_AND          BRA     OP_INVALID
+OP_AND          LEA     DISP_AND,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * AND Immediate
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ANDI         BRA     OP_INVALID
+OP_ANDI         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_ANDI,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Arithmetic Shift Left
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ASL          BRA     OP_INVALID
+OP_ASL          LEA     DISP_ASL,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Arithmetic Shift Right
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ASR          BRA     OP_INVALID
+OP_ASR          LEA     DISP_ASR,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Branch Conditionally - Carry Clear
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BCC          BRA     OP_INVALID
+OP_BCC          LEA     DISP_BCC,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Test a Bit and Change
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BCHG         BRA     OP_INVALID
+OP_BCHG         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_BCHG,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Branch Conditionally - Greater Than
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BGT          BRA     OP_INVALID
+OP_BGT          ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_BGT,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Branch Conditionally - Less or Equal
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BLE          BRA     OP_INVALID
+OP_BLE          ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_BLE,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Clear an Operand
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CLR          BRA     OP_INVALID
+OP_CLR          LEA     DISP_CLR,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Compare
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CMP          BRA     OP_INVALID
+OP_CMP          LEA     DISP_CMP,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Compare Immediate
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CMPI         BRA     OP_INVALID
+OP_CMPI         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_CMPI,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Signed Divide
 *---------------Opcode--Operands------------Comments---------------------------
-OP_DIVS         BRA     OP_INVALID
+OP_DIVS         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_DIVS,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Disassembler does not support provided opcode
 *---------------Opcode--Operands------------Comments---------------------------
 OP_INVALID      LEA     DISP_INVALID,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #28,D4              ;char shift
+                MOVE.W  (A2),D7
+                JSR     SR_PrintHex
+                
+                LEA     MSG_LINEBREAK,A1
+                MOVE.B  #14,D0
                 TRAP    #15
                 RTS
 
 * Jump to Subroutine
 *---------------Opcode--Operands------------Comments---------------------------
-OP_JSR          BRA     OP_INVALID
+OP_JSR          ADDA.W  #2,A2               ;Need to advance input for testing
+                ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_JSR,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Load Effective Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LEA          BRA     OP_INVALID
+OP_LEA          ADDA.W  #2,A2               ;Need to advance input for testing
+                ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_LEA,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Logical Shift Left
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LSL          BRA     OP_INVALID
+OP_LSL          LEA     DISP_LSL,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Logical Shift Right
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LSR          BRA     OP_INVALID
+OP_LSR          LEA     DISP_LSR,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Move Data from Source to Destination - Byte
 *---------------Opcode--Operands------------Comments---------------------------
@@ -405,23 +535,39 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
 
 * Move Data from Source to Destination - Long
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVE_L       BRA     OP_INVALID
+OP_MOVE_L       LEA     DISP_MOVE,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Move Data from Source to Destination - Word
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVE_W       BRA     OP_INVALID
+OP_MOVE_W       LEA     DISP_MOVE,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Move Multiple Registers
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEM        BRA     OP_INVALID
+OP_MOVEM        ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_MOVEM,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Move Quick
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEQ        BRA     OP_INVALID
+OP_MOVEQ        LEA     DISP_MOVEQ,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Signed Multiply
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MULS         BRA     OP_INVALID
+OP_MULS         LEA     DISP_MULS,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * No Operation
 *---------------Opcode--Operands------------Comments---------------------------
@@ -432,15 +578,24 @@ OP_NOP          LEA     DISP_NOP,A1
 
 * Rotate (Without Extend) Left
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ROL          BRA     OP_INVALID
+OP_ROL          LEA     DISP_ROL,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Rotate (Without Extend) Right
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ROR          BRA     OP_INVALID
+OP_ROR          LEA     DISP_ROR,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Return from Subroutine
 *---------------Opcode--Operands------------Comments---------------------------
-OP_RTS          BRA     OP_INVALID
+OP_RTS          LEA     DISP_RTS,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * PseudoOp Simhalt
 *---------------Opcode--Operands------------Comments---------------------------
@@ -452,11 +607,33 @@ OP_SIMHALT      LEA     DISP_SIMHALT,A1
 
 * Subtract
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUB          BRA     OP_INVALID
+OP_SUB          LEA     DISP_SUB,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 * Subtract Address
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUBA         BRA     OP_INVALID
+OP_SUBA         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_SUBA,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
+                
+* Subtract Immediate
+*---------------Opcode--Operands------------Comments---------------------------
+OP_SUBI         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_SUBI,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
+                
+* Subtract Quick
+*---------------Opcode--Operands------------Comments---------------------------
+OP_SUBQ         LEA     DISP_SUBQ,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
 
 *------------------------------------------------------------------------------
 * Functions -------------------------------------------------------------------
@@ -582,7 +759,7 @@ deMode_111      MOVEA.L A2,A3
                 
                 *absolute data short
                 *read next word from memory, print in hex
-                LEA     DISP_DLR,A1
+                LEA     DISP_DOLLAR,A1
                 MOVE.B  #14,D0
                 TRAP    #15    
                 
@@ -627,7 +804,11 @@ SR_Eval7to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 8 to 3
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval8to3     RTS
+SR_Eval8to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #10,D0              ;Prepare a shift of 12 bits
+                LSL.W   #7,D7               ;Truncate up to bit 8
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 8 to 6
 *---------------Opcode--Operands------------Comments---------------------------
@@ -639,7 +820,11 @@ SR_Eval8to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 
 * Evaluate Bits 11 to 6
 *---------------Opcode--Operands------------Comments---------------------------
-SR_Eval11to6    RTS
+SR_Eval11to6    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
+                LSL.W   #4,D7               ;Truncate up to bit 11
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
 
 * Evaluate Bits 11 to 8
 *---------------Opcode--Operands------------Comments---------------------------
@@ -732,12 +917,40 @@ MSG_LINEBREAK   DC.B    CR,LF,0
 
 DISP_ADD        DC.B    'ADD',0
 DISP_ADDA       DC.B    'ADDA',0
-DISP_NOP        DC.B    'NOP',0
+DISP_ADDI       DC.B    'ADDI',0
+DISP_ADDQ       DC.B    'ADDQ',0
+DISP_AND        DC.B    'AND',0
+DISP_ANDI       DC.B    'ANDI',0
+DISP_ASL        DC.B    'ASL',0
+DISP_ASR        DC.B    'ASR',0
+DISP_BCC        DC.B    'BCC',0
+DISP_BCHG       DC.B    'BCHG',0
+DISP_BGT        DC.B    'BGT',0
+DISP_BLE        DC.B    'BLE',0
+DISP_CLR        DC.B    'CLR',0
+DISP_CMP        DC.B    'CMP',0
+DISP_CMPI       DC.B    'CMPI',0
+DISP_DIVS       DC.B    'DIVS',0
+DISP_INVALID    DC.B    'INVALID, got: ',0
+DISP_JSR        DC.B    'JSR',0
+DISP_LEA        DC.B    'LEA',0
+DISP_LSL        DC.B    'LSL',0
+DISP_LSR        DC.B    'LSR',0
 DISP_MOVE       DC.B    'MOVE',0
-DISP_INVALID    DC.B    'INVALID',0
+DISP_MOVEM      DC.B    'MOVEM',0
+DISP_MOVEQ      DC.B    'MOVEQ',0
+DISP_MULS       DC.B    'MULS',0
+DISP_NOP        DC.B    'NOP',0
+DISP_ROL        DC.B    'ROL',0
+DISP_ROR        DC.B    'ROR',0
+DISP_RTS        DC.B    'RTS',0
 DISP_SIMHALT    DC.B    'SIMHALT',0
+DISP_SUB        DC.B    'SUB',0
+DISP_SUBA       DC.B    'SUBA',0
+DISP_SUBI       DC.B    'SUBI',0
+DISP_SUBQ       DC.B    'SUBQ',0
 
-DISP_DLR        DC.B    '$',0
+DISP_DOLLAR     DC.B    '$',0
 DISP_MINUS      DC.B    '-',0
 DISP_PLUS       DC.B    '+',0
 DISP_OPAREN     DC.B    '(',0
@@ -766,6 +979,8 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'F',0
 
                 END     START               ;Do not put anything below this line.
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
