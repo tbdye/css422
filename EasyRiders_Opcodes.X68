@@ -224,7 +224,7 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 LSL.W   D5,D3
                 LSR.W   D4,D3
             
-                JSR     SR_Decode_EA
+                JSR     EA_Decode_EA
 
                 LEA     DISP_COMMA,A1
                 MOVE.B  #14,D0
@@ -240,7 +240,7 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 LSL.W   D5,D3
                 LSR.W   D4,D3
 
-                JSR     SR_Decode_EA
+                JSR     EA_Decode_EA
             
                 LEA     MSG_LINEBREAK,A1
                 MOVE.B  #14,D0
@@ -357,6 +357,7 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
 
 
 
