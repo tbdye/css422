@@ -1,7 +1,7 @@
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
-* Date       : 2/29/16
+* Date       : 3/1/16
 * Description: CSS 422 Final Project - University of Washington | Bothell
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ ROOT_JMP_TABLE  JMP     BRANCH_0            ;$0 - Bit Manipulation/MOVEP/Immedia
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval11to8 and SR_Eval7to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_0        JSR     SR_Eval11to8
+BRANCH_0        JSR     SR_Eval11to8        ;Reads A2, Returns D7
 
                 CMP.B   #$2,D7
                 BEQ     OP_ANDI             ;$2
@@ -47,7 +47,7 @@ BRANCH_0        JSR     SR_Eval11to8
                 CMP.B   #$C,D7
                 BEQ     OP_CMPI             ;$C
 
-                JSR     SR_Eval7to6
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
                 CMP.B   #%01,D7
                 BEQ     OP_BCHG             ;%01
@@ -59,7 +59,7 @@ BRANCH_0        JSR     SR_Eval11to8
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval11to8 and SR_Eval11to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_4        JSR     SR_Eval11to8
+BRANCH_4        JSR     SR_Eval11to8        ;Reads A2, Returns D7
                 
                 CMP.B   #$2,D7
                 BEQ     OP_CLR              ;$2
@@ -69,13 +69,13 @@ BRANCH_4        JSR     SR_Eval11to8
                 BEQ     BRANCH_4E           ;$E
                 
                 
-                JSR     SR_Eval11to6
+                JSR     SR_Eval11to6        ;Reads A2, Returns D7
                 ANDI.B  #%00100010,D7       ;Mask out bits where index = 0 for eval
                 
                 CMP.B   #%00100010,D7
                 BEQ     OP_MOVEM            ;%1x001x
                 
-                JSR     SR_Eval11to6
+                JSR     SR_Eval11to6        ;Reads A2, Returns D7
                 ANDI.B  #%00000111,D7       ;Mask out bits where index = 0 for eval
                 
                 CMP.B   #%00000111,D7
@@ -102,7 +102,7 @@ BRANCH_5        MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval11to8)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_6        JSR     SR_Eval11to8
+BRANCH_6        JSR     SR_Eval11to8        ;Reads A2, Returns D7
                 
                 CMP.B   #$4,D7
                 BEQ     OP_BCC              ;$4
@@ -118,8 +118,10 @@ BRANCH_6        JSR     SR_Eval11to8
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_8        JSR     SR_Eval8to6
+BRANCH_8        JSR     SR_Eval8to6         ;Reads A2, Returns D7
                 
+                CMP.B   #%011,D7
+                BEQ     OP_DIVU             ;%011
                 CMP.B   #%111,D7
                 BEQ     OP_DIVS             ;%111
                 
@@ -130,7 +132,7 @@ BRANCH_8        JSR     SR_Eval8to6
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_9        JSR     SR_Eval8to6
+BRANCH_9        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 
                 CMP.B   #%011,D7
                 BEQ     OP_SUBA             ;%011
@@ -144,7 +146,7 @@ BRANCH_9        JSR     SR_Eval8to6
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_B        JSR     SR_Eval8to6
+BRANCH_B        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 
                 CMP.B   #%000,D7
                 BEQ     OP_CMP              ;%000
@@ -160,7 +162,7 @@ BRANCH_B        JSR     SR_Eval8to6
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_C        JSR     SR_Eval8to6
+BRANCH_C        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 
                 CMP.B   #%011,D7
                 BEQ     OP_INVALID          ;%011 - Op not supported
@@ -174,7 +176,7 @@ BRANCH_C        JSR     SR_Eval8to6
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_D        JSR     SR_Eval8to6
+BRANCH_D        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 
                 CMP.B   #%011,D7
                 BEQ     OP_ADDA             ;%011
@@ -188,7 +190,7 @@ BRANCH_D        JSR     SR_Eval8to6
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to3)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_E        JSR     SR_Eval8to3
+BRANCH_E        JSR     SR_Eval8to3         ;Reads A2, Returns D7
                 ANDI.B  #%00100011,D7       ;Mask out bits where index = 0 for eval
                 
                 CMP.B   #%00000000,D7
@@ -218,12 +220,12 @@ BRANCH_F        BRA     OP_SIMHALT
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval7to4 and SR_Eval7to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_4E       JSR     SR_Eval7to4
+BRANCH_4E       JSR     SR_Eval7to4         ;Reads A2, Returns D7
                 
                 CMP.B   #$7,D7
                 BEQ     BRANCH_4E7          ;$7
                 
-                JSR     SR_Eval7to6
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
                 CMP.B   #%10,D7
                 BEQ     OP_JSR              ;%10
@@ -238,7 +240,7 @@ BRANCH_4E       JSR     SR_Eval7to4
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval3to0)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_4E7      JSR     SR_Eval3to0
+BRANCH_4E7      JSR     SR_Eval3to0         ;Reads A2, Returns D7
 
                 CMP.B   #$1,D7
                 BEQ     OP_NOP              ;$1
@@ -246,6 +248,7 @@ BRANCH_4E7      JSR     SR_Eval3to0
                 BEQ     OP_RTS              ;$5
                 
                 BRA     OP_INVALID          ;No matches found
+
 
 *~Font name~Courier New~
 *~Font size~10~

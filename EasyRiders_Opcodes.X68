@@ -1,7 +1,7 @@
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
-* Date       : 2/29/16
+* Date       : 3/1/16
 * Description: CSS 422 Final Project - University of Washington | Bothell
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
@@ -57,6 +57,7 @@ OP_AND          LEA     DISP_AND,A1
                 RTS
 
 * AND Immediate ---------------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ANDI         ADDA.W  #2,A2               ;Need to advance input for testing
                 LEA     DISP_ANDI,A1
@@ -65,6 +66,7 @@ OP_ANDI         ADDA.W  #2,A2               ;Need to advance input for testing
                 RTS
 
 * Arithmetic Shift Left -------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ASL          LEA     DISP_ASL,A1
                 MOVE.B  #13,D0
@@ -86,6 +88,7 @@ OP_BCC          LEA     DISP_BCC,A1
                 RTS
 
 * Test a Bit and Change -------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_BCHG         ADDA.W  #2,A2               ;Need to advance input for testing
                 LEA     DISP_BCHG,A1
@@ -132,9 +135,18 @@ OP_CMPI         ADDA.W  #2,A2               ;Need to advance input for testing
                 RTS
 
 * Signed Divide ---------------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_DIVS         ADDA.W  #2,A2               ;Need to advance input for testing
                 LEA     DISP_DIVS,A1
+                MOVE.B  #13,D0
+                TRAP    #15
+                RTS
+
+* Unsigned Divide ---------------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+OP_DIVU         ADDA.W  #2,A2               ;Need to advance input for testing
+                LEA     DISP_DIVU,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
@@ -181,6 +193,7 @@ OP_LSL          LEA     DISP_LSL,A1
                 RTS
 
 * Logical Shift Right ---------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_LSR          LEA     DISP_LSR,A1
                 MOVE.B  #13,D0
@@ -293,6 +306,7 @@ OP_ROL          LEA     DISP_ROL,A1
                 RTS
 
 * Rotate (Without Extend) Right -----------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ROR          LEA     DISP_ROR,A1
                 MOVE.B  #13,D0
@@ -343,6 +357,8 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
+
 
 
 

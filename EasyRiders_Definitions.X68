@@ -1,21 +1,16 @@
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
-* Date       : 2/29/16
+* Date       : 3/1/16
 * Description: CSS 422 Final Project - University of Washington | Bothell
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
 * Disassembler variables, constants, and definitions
 *------------------------------------------------------------------------------
-* Variables
+* Equates
 *---------------Opcode--Operands------------Comments---------------------------
 CR              EQU     $0D                 ;Carriage Return
 LF              EQU     $0A                 ;Line feed
-
-INPUT_BUFFER    EQU     $2000               ;Create an input buffer for ascii strings.
-BOOL_FINISHED   DS.B    1                   ;Finished reading data
-LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
-INPUT_LOC       DS.L    1                   ;Location to read input data
 
 * Printed Messages
 *---------------Opcode--Operands------------Comments---------------------------
@@ -41,6 +36,7 @@ DISP_CLR        DC.B    'CLR',0
 DISP_CMP        DC.B    'CMP',0
 DISP_CMPI       DC.B    'CMPI',0
 DISP_DIVS       DC.B    'DIVS',0
+DISP_DIVU       DC.B    'DIVU',0
 DISP_INVALID    DC.B    'INVALID, got: ',0
 DISP_JSR        DC.B    'JSR',0
 DISP_LEA        DC.B    'LEA',0
@@ -89,6 +85,13 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'D',0
                 DC.B    'E',0
                 DC.B    'F',0
+
+* Defined Storage
+*---------------Opcode--Operands------------Comments---------------------------                
+BOOL_FINISHED   DS.B    1                   ;Finished reading data
+LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
+INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+INPUT_LOC       DS.L    1                   ;Location to read input data
 
 *~Font name~Courier New~
 *~Font size~10~
