@@ -24,6 +24,14 @@ SR_AtoHLoop     MOVE.B  (A1)+,D0            ; Get the first byte
 athEndLoop      MOVE.L  D1,D7               ; Return hex number in D7
                 RTS
 
+* Evaluate Bits 2 to 0 --------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Eval2to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #13,D0              ;Prepare a shift of 12 bits
+                LSL.W   D0,D7               ;Truncate up to bit 2
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
+
 * Evaluate Bits 3 to 0 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval3to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
@@ -32,52 +40,69 @@ SR_Eval3to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
                 LSR.W   D0,D7               ;Isolate nibble
                 RTS
 
+* Evaluate Bits 5 to 3 --------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Eval5to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
+                LSL.W   D0,D7               ;Truncate up to bit 5
+                MOVE.B  #13,D0              ;Prepare a shift of 13 bits
+                LSR.W   D0,D7               ;Isolate remainder
+                RTS
+
 * Evaluate Bits 7 to 4 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval7to4     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSL.W   #8,D7               ;Truncate up to third nibble
+                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSR.W   D0,D7               ;Isolate nibble
                 RTS
 
 * Evaluate Bits 7 to 6 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval7to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #14,D0              ;Prepare a shift of 12 bits
                 LSL.W   #8,D7               ;Truncate up to bit 7
+                MOVE.B  #14,D0              ;Prepare a shift of 12 bits
                 LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
 * Evaluate Bits 8 to 3 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval8to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #10,D0              ;Prepare a shift of 12 bits
                 LSL.W   #7,D7               ;Truncate up to bit 8
+                MOVE.B  #10,D0              ;Prepare a shift of 12 bits
                 LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
 * Evaluate Bits 8 to 6 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval8to6     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #13,D0              ;Prepare a shift of 13 bits
                 LSL.W   #7,D7               ;Truncate up to bit 8
+                MOVE.B  #13,D0              ;Prepare a shift of 13 bits
                 LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
 * Evaluate Bits 11 to 6 -------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval11to6    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
                 LSL.W   #4,D7               ;Truncate up to bit 11
+                MOVE.B  #10,D0              ;Prepare a shift of 10 bits
                 LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
 * Evaluate Bits 11 to 8 -------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval11to8    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
-                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSL.W   #4,D7               ;Truncate up to second nibble
+                MOVE.B  #12,D0              ;Prepare a shift of 12 bits
                 LSR.W   D0,D7               ;Isolate nibble
+                RTS
+
+* Evaluate Bits 11 to 9 -------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Eval11to9    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                LSL.W   #4,D7               ;Truncate up to bit 11
+                MOVE.B  #13,D0              ;Prepare a shift of 13 bits
+                LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
 * Print Address ---------------------------------------------------------------
@@ -117,26 +142,42 @@ SR_PrintHex     LEA     TABLE_HEXCHAR, A3
                 ADD.B   #4,D5
                 CMP.B   #32,D5
                 BNE     SR_PrintHex
+                
+                CLR.L   D5
                 RTS
 
 * Print .B, .W, or .L ---------------------------------------------------------
 * Size is displayed immediately after the opcode.
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintSize    MOVEM.L D0-D7,-(SP)         ;Move registers to stack
-                MOVE.L  D7,D0               ;Create additional copies of bits for evaluations
-                MOVE.L  D7,D1
-                ANDI.B  #%000,D0            ;Mask for Byte
-                ANDI.B  #%001,D1            ;Mask for Word
-                ANDI.B  #%010,D7            ;Mask for Long
+SR_PrintSize    MOVEM.L A0-A6/D0-D6,-(SP)   ;Store registers to stack
                 
-                CMP.B   #0,D0
-                ;BEQ     FN_PrintSizeB       ;%x00
-                CMP.B   #1,D1
-                ;BEQ     FN_PrintSizeW       ;%x01
-                CMP.B   #2,D7
-                ;BEQ     FN_PrintSizeL       '%x10
-                
-                MOVEM.L (SP)+,D0-D7         ;Move registers from stack
+                CMP.B   #%00,D7
+                BEQ     psSizeB             ;%00
+                CMP.B   #%01,D7
+                BEQ     psSizeW             ;%01
+                CMP.B   #%10,D7
+                BEQ     psSizeL             ;%10
+
+                BRA     psError             ;Return to parent if error exists
+
+*   Print .B        
+psSizeB         LEA     DISP_SIZE_B,A1      ;Store the console message for output.
+                BRA     psDone
+
+*   Print .W
+psSizeW         LEA     DISP_SIZE_W,A1      ;Store the console message for output.
+                BRA     psDone           
+
+*   Print .L
+psSizeL         LEA     DISP_SIZE_L,A1      ;Store the console message for output.
+                BRA     psDone
+
+*   Print size symbol
+psDone          MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                JSR     SR_PrintTab         ;Reads none, Return void
+
+psError         MOVEM.L (SP)+,A0-A6/D0-D6   ;Replace registers from stack
                 RTS
                 
 * Print tab -------------------------------------------------------------------
@@ -164,6 +205,10 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
+
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~

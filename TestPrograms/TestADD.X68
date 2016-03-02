@@ -28,15 +28,17 @@ START:
         ADD.L  $0000A000,D1    ;test14 src (xxx).L
         
 * Tricky
-        ADD.B  $00004340,D3    ;test15
-        ADD.B  $A340,D3        ;test16
-        ADD.B  $FFFFA340,D3    ;test17
+        ADD.B  $4340,D3        ;test15
+        ADD.B  $0000A340,D3    ;test16
+        ADD.B  $0000A340,D3    ;test17
         ADD.B  $FFFF4340,D3    ;test18
-        ADD.W  $A340,D3        ;test19
+        ADD.W  $0000A340,D3    ;test19
         
-        SIMHALT                 ;halt simulator
+        SIMHALT                ;halt simulator
 
-        END     START           ;last line of source
+        END     START          ;last line of source
+
+
 
 
 *~Font name~Courier New~

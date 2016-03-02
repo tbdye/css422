@@ -12,16 +12,74 @@
 * A1: Trap #15 Input and Output (subject to frequent overwrites)
 * A2: Current test opcode in use and sequence locator (sequence as necessary)
 * D0: Trap #15 task switch (subject to frequent overwrites)
+* D2: Used for EA_DecodeEA to decode EA mode
+* D3: Used for EA_DecodeEA to decode EA register
+* D7: Workspace for opcode evaluation
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ADD          LEA     DISP_ADD,A1         ;Store the console message for output.
-                ;MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
-                MOVE.B  #13,D0 ; remove later
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
 
-                ;JSR     SR_Eval8to6         ;Get bits for OPMODE to display size
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
-                ;JSR     SR_PrintSize
+                JSR     SR_PrintSize        ;Reads D7, Returns void
                 
+                BTST    #8,(A2)             
+                BEQ     opAddDnMode         ;Bit 8 = 0
+                
+                BRA     opAddEAMode         ;Bit 8 = 1
+                
+*   ADD <ea> + Dn --> Dn
+opAddDnMode     JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,D2               ;Copy bits to decode src mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode src register
+                
+*   Print source EA
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+*   Print comma
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                MOVE.W  #0,D2               ;Force Dn dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+*   Print destination EA
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+                
+                BRA     opAddDone
+
+*   ADD Dn + <ea> --> <ea>
+opAddEAMode     MOVE.W  #0,D2               ;Force Dn src mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode src register
+
+*   Print source EA
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+*   Print comma
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,D2               ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+*   Print destination EA
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+                
+opAddDone       LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 RTS
 
 * Add Address -----------------------------------------------------------------
@@ -357,6 +415,10 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
+
+
+
 
 
 
