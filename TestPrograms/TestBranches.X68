@@ -9,8 +9,8 @@ START   ORG     $7000
 * Assigned opcodes here
         ADD.B   D0,D1       ; D200 - ADD
         ADDA.W  D0,A0       ; D0C0 - ADDA
-        ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
         ADDI.B  #$FF,D0     ; 0600 00FF - ADDI
+        ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
         AND.B   D0,D1       ; C200 - AND
         ASR.B   #1,D0       ; E200 - SHIFT_ROT
         BCC.B   test1       ; 6446 - BCC
@@ -56,6 +56,7 @@ test4   RTS
 msg     DC.B    'test5',0
 
         END     START       ; last line of source
+
 
 
 

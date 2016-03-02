@@ -1,6 +1,6 @@
 00007000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.04
-Created On: 3/1/2016 8:55:44 PM
+Created On: 3/2/2016 1:14:56 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Test Branches
@@ -13,8 +13,8 @@ Created On: 3/1/2016 8:55:44 PM
 00007000                             9  * Assigned opcodes here
 00007000  D200                      10          ADD.B   D0,D1       ; D200 - ADD
 00007002  D0C0                      11          ADDA.W  D0,A0       ; D0C0 - ADDA
-00007004  5200                      12          ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
-00007006  0600 00FF                 13          ADDI.B  #$FF,D0     ; 0600 00FF - ADDI
+00007004  0600 00FF                 12          ADDI.B  #$FF,D0     ; 0600 00FF - ADDI
+00007008  5200                      13          ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
 0000700A  C200                      14          AND.B   D0,D1       ; C200 - AND
 0000700C  E200                      15          ASR.B   #1,D0       ; E200 - SHIFT_ROT
 0000700E  6448                      16          BCC.B   test1       ; 6446 - BCC
