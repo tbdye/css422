@@ -10,10 +10,8 @@
 * Add -------------------------------------------------------------------------
 * Register list:
 * A1: Trap #15 Input and Output (subject to frequent overwrites)
-* A2: Current test opcode in use and sequence locator (sequence as necessary)
+* A2: Current test opcode in use and sequence locator (read only)
 * D0: Trap #15 task switch (subject to frequent overwrites)
-* D2: Used for EA_DecodeEA to decode EA mode
-* D3: Used for EA_DecodeEA to decode EA register
 * D7: Workspace for opcode evaluation
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ADD          LEA     DISP_ADD,A1         ;Store the console message for output.
@@ -22,7 +20,8 @@ OP_ADD          LEA     DISP_ADD,A1         ;Store the console message for outpu
 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
-                JSR     SR_PrintSize        ;Reads D7, Returns void
+*   Print size
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 BTST    #8,(A2)             
                 BEQ     opAddDnMode         ;Bit 8 = 0
@@ -55,34 +54,40 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 JSR     SR_Eval2to0         ;Reads A2, Returns D7
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
-*   Print source EA
-opAddPrintEA    MOVE.W  SRC_MODE,D2
-                MOVE.W  SRC_REGISTER,D3
-                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
-
-*   Print comma
-                LEA     DISP_COMMA,A1       ;Store the console message for output.
-                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
-                TRAP    #15                 ;Display to console.
+*   Print source and destination EA
+opAddPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 
-*   Print destination EA
-                MOVE.W  DEST_MODE,D2
-                MOVE.W  DEST_REGISTER,D3
-                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
-                
-                LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
-                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
-                TRAP    #15                 ;Display to console.
                 RTS
 
 * Add Address -----------------------------------------------------------------
 * Register list:
 * A1: Trap #15 Input and Output (subject to frequent overwrites)
 * D0: Trap #15 task switch (subject to frequent overwrites)
+* D7: Workspace for opcode evaluation
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDA         LEA     DISP_ADDA,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_ADDA         LEA     DISP_ADDA,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval8to6         ;Reads A2, Returns D7
+
+*   Print size                
+                JSR     SR_PrntSize3bit     ;Reads D7, Returns void
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to decode src mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+                
+                MOVE.W  #1,DEST_MODE        ;Force An dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                
                 RTS
 
 * Add Immediate ---------------------------------------------------------------
@@ -408,6 +413,7 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
 
 
 

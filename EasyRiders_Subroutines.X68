@@ -116,6 +116,26 @@ SR_PrintAddr    CLR     D5
                 JSR     SR_PrintHex
                 JSR     SR_PrintTab
                 RTS
+
+* Print Effective Addresses ---------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_PrintEA      MOVE.W  SRC_MODE,D2
+                MOVE.W  SRC_REGISTER,D3
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                MOVE.W  DEST_MODE,D2
+                MOVE.W  DEST_REGISTER,D3
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+                
+                LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                RTS
                               
 * Print in Hex ----------------------------------------------------------------
 * Number of digits = 32-D5/4
@@ -147,9 +167,9 @@ SR_PrintHex     LEA     TABLE_HEXCHAR, A3
                 RTS
 
 * Print .B, .W, or .L ---------------------------------------------------------
-* Size is displayed immediately after the opcode.
+* Size is displayed immediately after the opcode.  Input is 2 bits
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintSize    MOVEM.L A0-A6/D0-D6,-(SP)   ;Store registers to stack
+SR_PrntSize2bit MOVEM.L A0-A6/D0-D6,-(SP)   ;Store registers to stack
                 
                 CMP.B   #%00,D7
                 BEQ     psSizeB             ;%00
@@ -158,6 +178,18 @@ SR_PrintSize    MOVEM.L A0-A6/D0-D6,-(SP)   ;Store registers to stack
                 CMP.B   #%10,D7
                 BEQ     psSizeL             ;%10
 
+                BRA     psError             ;Return to parent if error exists
+
+* Print .W, or .L ---------------------------------------------------------
+* Size is displayed immediately after the opcode.  Input is 3 bits
+*---------------Opcode--Operands------------Comments---------------------------
+SR_PrntSize3bit MOVEM.L A0-A6/D0-D6,-(SP)   ;Store registers to stack
+
+                CMP.B   #%011,D7
+                BEQ     psSizeW             ;%011
+                CMP.B   #%111,D7
+                BEQ     psSizeL             ;%111
+                
                 BRA     psError             ;Return to parent if error exists
 
 *   Print .B        
@@ -205,6 +237,8 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
 
 
 
