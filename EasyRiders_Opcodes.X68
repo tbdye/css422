@@ -92,10 +92,27 @@ OP_ADDA         LEA     DISP_ADDA,A1        ;Store the console message for outpu
 
 * Add Immediate ---------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDI         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_ADDI,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_ADDI         LEA     DISP_ADDI,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size                
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                MOVE.W  #7,SRC_MODE         ;Force Absolute Short/Long/Immediate Data
+                MOVE.W  #4,SRC_REGISTER     ;Force Immediate Data selection
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_MODE        ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                
                 RTS
 
 * Add Quick -------------------------------------------------------------------
@@ -413,6 +430,7 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
 
 
 

@@ -119,7 +119,7 @@ EA_Mode_101     RTS
 *---------------Opcode--Operands------------Comments---------------------------
 EA_Mode_110     RTS
 
-* 7 - Absolute Data Short/Long/Immediate --------------------------------------
+* 7 - Absolute Short/Long/Immediate Data --------------------------------------
 * Brief description of operation
 * Registers in : 
 * Registers out: 
@@ -134,7 +134,7 @@ EA_Mode_111     MOVEA.L A2,A3
                 
                 BRA     EA_INVALID  * I decoupled this section and changed it to positive logic
                 
-* Absolute Data - Short -------------------------------------------------------
+* 0 - Absolute Data - Short ---------------------------------------------------
 * Brief description of operation
 * Registers in : 
 * Registers out: 
@@ -154,7 +154,7 @@ EA_AbsShort_000 LEA     DISP_DOLLAR,A1
                 
                 RTS
 
-* Absolute Data - Long --------------------------------------------------------
+* 1 - Absolute Data - Long ----------------------------------------------------
 * Brief description of operation
 * Registers in : 
 * Registers out: 
@@ -174,22 +174,25 @@ EA_AbsLong_001  LEA     DISP_DOLLAR,A1
                 
                 RTS
 
-* Immediate Data --------------------------------------------------------------
+* 4 - Immediate Data ----------------------------------------------------------
 * Brief description of operation
 * Registers in : 
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
 EA_Immed_100    *immediate data
                 *figure out how long the current commad is
-
+                ADDA.W  #2,A2 *added for testing
                 RTS
 
-* Immediate Data --------------------------------------------------------------
+* Invalid EA ------------------------------------------------------------------
 * Brief description of operation
 * Registers in : 
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
 EA_INVALID      RTS                         ;This should throw an error with output
+
+
+
 
 
 
