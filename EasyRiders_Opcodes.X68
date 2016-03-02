@@ -91,6 +91,10 @@ OP_ADDA         LEA     DISP_ADDA,A1        ;Store the console message for outpu
                 RTS
 
 * Add Immediate ---------------------------------------------------------------
+* Register list:
+* A1: Trap #15 Input and Output (subject to frequent overwrites)
+* D0: Trap #15 task switch (subject to frequent overwrites)
+* D7: Workspace for opcode evaluation
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ADDI         LEA     DISP_ADDI,A1        ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
@@ -116,6 +120,7 @@ OP_ADDI         LEA     DISP_ADDI,A1        ;Store the console message for outpu
                 RTS
 
 * Add Quick -------------------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ADDQ         LEA     DISP_ADDQ,A1
                 MOVE.B  #13,D0
@@ -200,6 +205,7 @@ OP_CMP          LEA     DISP_CMP,A1
                 RTS
 
 * Compare Immediate -----------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CMPI         ADDA.W  #2,A2               ;Need to advance input for testing
                 LEA     DISP_CMPI,A1
@@ -409,6 +415,7 @@ OP_SUB          LEA     DISP_SUB,A1
                 RTS
 
 * Subtract Address ------------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SUBA         ADDA.W  #2,A2               ;Need to advance input for testing
                 LEA     DISP_SUBA,A1
@@ -417,6 +424,7 @@ OP_SUBA         ADDA.W  #2,A2               ;Need to advance input for testing
                 RTS
                 
 * Subtract Immediate ----------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SUBI         ADDA.W  #2,A2               ;Need to advance input for testing
                 LEA     DISP_SUBI,A1
@@ -425,11 +433,13 @@ OP_SUBI         ADDA.W  #2,A2               ;Need to advance input for testing
                 RTS
                 
 * Subtract Quick --------------------------------------------------------------
+* Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
 
 
 
