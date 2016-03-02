@@ -41,22 +41,7 @@ opAddDnMode     JSR     SR_Eval5to3         ;Reads A2, Returns D7
                 JSR     SR_Eval11to9        ;Reads A2, Returns D7
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
                 
-*   Print source EA
-                MOVE.W  SRC_MODE,D2
-                MOVE.W  SRC_REGISTER,D3
-                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
-
-*   Print comma
-                LEA     DISP_COMMA,A1       ;Store the console message for output.
-                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
-                TRAP    #15                 ;Display to console.
-                
-*   Print destination EA
-                MOVE.W  DEST_MODE,D2
-                MOVE.W  DEST_REGISTER,D3
-                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
-                
-                BRA     opAddDone
+                BRA     opAddPrintEA
 
 *   ADD Dn + <ea> --> <ea>
 opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
@@ -71,7 +56,7 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
 *   Print source EA
-                MOVE.W  SRC_MODE,D2
+opAddPrintEA    MOVE.W  SRC_MODE,D2
                 MOVE.W  SRC_REGISTER,D3
                 JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
 
@@ -85,7 +70,7 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 MOVE.W  DEST_REGISTER,D3
                 JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
                 
-opAddDone       LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
+                LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
                 RTS
@@ -423,6 +408,8 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
+
 
 
 
