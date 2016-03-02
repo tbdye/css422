@@ -90,8 +90,13 @@ TABLE_HEXCHAR   DC.B    '0',0
 *---------------Opcode--Operands------------Comments---------------------------                
 BOOL_FINISHED   DS.B    1                   ;Finished reading data
 LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
+SRC_MODE        DS.W    1                   ;Storage for the source EA mode type
+SRC_REGISTER    DS.W    1                   ;Storage for the source EA register ID
+DEST_MODE       DS.W    1                   ;Storage for the destination EA mode type
+DEST_REGISTER   DS.W    1                   ;Storage for the destination EA register ID
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
 INPUT_LOC       DS.L    1                   ;Location to read input data
+
 
 *~Font name~Courier New~
 *~Font size~10~
