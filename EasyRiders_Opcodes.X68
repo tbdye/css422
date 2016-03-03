@@ -128,35 +128,103 @@ OP_ADDQ         LEA     DISP_ADDQ,A1
                 RTS
 
 * AND Logical -----------------------------------------------------------------
+* Register list:
+* A1: Trap #15 Input and Output (subject to frequent overwrites)
+* A2: Current test opcode in use and sequence locator (read only)
+* D0: Trap #15 task switch (subject to frequent overwrites)
+* D7: Workspace for opcode evaluation
 *---------------Opcode--Operands------------Comments---------------------------
-OP_AND          LEA     DISP_AND,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_AND          LEA     DISP_AND,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                BTST    #8,(A2)             
+                BEQ     opAndDnMode         ;Bit 8 = 0
+                
+                BRA     opAndEAMode         ;Bit 8 = 1
+                
+*   AND <ea> + Dn --> Dn
+opAndDnMode     JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to decode src mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+                
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+                BRA     opAndPrintEA
+
+*   AND Dn + <ea> --> <ea>
+opAndEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_MODE        ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+
+*   Print source and destination EA
+opAndPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                
                 RTS
 
 * AND Immediate ---------------------------------------------------------------
 * Optional opcode that is not required by this assignment
+* Register list:
+* A1: Trap #15 Input and Output (subject to frequent overwrites)
+* D0: Trap #15 task switch (subject to frequent overwrites)
+* D7: Workspace for opcode evaluation
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ANDI         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_ANDI,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_ANDI         LEA     DISP_ANDI,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size                
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                MOVE.W  #7,SRC_MODE         ;Force Absolute Short/Long/Immediate Data
+                MOVE.W  #4,SRC_REGISTER     ;Force Immediate Data selection
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_MODE        ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                
                 RTS
 
 * Arithmetic Shift Left -------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ASL          LEA     DISP_ASL,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
-
+OP_ASL          LEA     DISP_ASL,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_ShiftRot         ;Grouping for ASL/ASR/LSL/LSR/ROL/ROR
+                
 * Arithmetic Shift Right ------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ASR          LEA     DISP_ASR,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_ASR          LEA     DISP_ASR,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_ShiftRot         ;Grouping for ASL/ASR/LSL/LSR/ROL/ROR
 
 * Branch Conditionally - Carry Clear ------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
@@ -266,18 +334,20 @@ OP_LEA          ADDA.W  #2,A2               ;Need to advance input for testing
 
 * Logical Shift Left ----------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LSL          LEA     DISP_LSL,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_LSL          LEA     DISP_LSL,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_ShiftRot         ;Grouping for ASL/ASR/LSL/LSR/ROL/ROR
 
 * Logical Shift Right ---------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LSR          LEA     DISP_LSR,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_LSR          LEA     DISP_LSR,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_ShiftRot         ;Grouping for ASL/ASR/LSL/LSR/ROL/ROR
 
 * Move Data from Source to Destination - Byte ---------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
@@ -379,18 +449,20 @@ OP_NOP          LEA     DISP_NOP,A1
 
 * Rotate (Without Extend) Left ------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ROL          LEA     DISP_ROL,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_ROL          LEA     DISP_ROL,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_ShiftRot         ;Grouping for ASL/ASR/LSL/LSR/ROL/ROR
 
 * Rotate (Without Extend) Right -----------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ROR          LEA     DISP_ROR,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_ROR          LEA     DISP_ROR,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_ShiftRot         ;Grouping for ASL/ASR/LSL/LSR/ROL/ROR
 
 * Return from Subroutine ------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
@@ -399,12 +471,94 @@ OP_RTS          LEA     DISP_RTS,A1
                 TRAP    #15
                 RTS
 
+* Grouping for ASL/ASR/LSL/LSR/ROL/ROR ----------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+OP_ShiftRot     JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size                
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                CMP.B   #%11,D7
+                BEQ     opShRoMemory        ;%11
+                
+                MOVE.W  (A2),D7  * not sure why I can't just bittest out of (A2) directly
+                BTST    #5,D7             
+                BEQ     opShRoCount         ;Bit 5 = 0
+                
+                BRA     opShRoRegister      ;Bit 5 = 1
+
+*   Memory Shifts
+opShRoMemory    MOVE.W  #7,D2               ;Force Absolute Short/Long/Immediate Data mode
+                MOVE.W  #4,D3               ;Force Immediate Data selection
+                
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+                BRA     opShRoDone
+
+*   Register Shifts using Immediate Count
+opShRoCount     LEA     DISP_OCTOTHORPE,A1  ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                
+                CLR.L   D1                  ;Ensure output register is clear
+                
+                MOVE.W  D7,D1               ;Copy bits to D1 for console output.
+                
+                CMP.B   #0,D1
+                BEQ     opShRoIfZero
+                
+opShRoDispCnt   MOVE.B  #3,D0               ;Will display signed number from D1
+                TRAP    #15                 ;Display to console.
+                
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                
+                MOVE.W  #0,D2               ;Force Dn dest mode
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+                BRA     opShRoDone
+                
+*   Count is 8 if value is 0
+opShRoIfZero    MOVE.W  #8,D1               ;#0 - value of zero represents a count of eight
+                BRA     OpShRoDispCnt
+
+*   Register Shifts using Register Count
+opShRoRegister  MOVE.W  #0,SRC_MODE         ;Force Dn src mode
+
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+
+                RTS
+
+*   Print memory address
+opShRoDone      LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                RTS
+
 * PseudoOp Simhalt ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SIMHALT      LEA     DISP_SIMHALT,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 MOVE.B  #1,BOOL_FINISHED    ;Mark that input machine code ended
+                
                 RTS
 
 * Subtract --------------------------------------------------------------------
@@ -439,17 +593,6 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
-
-
-
-
-
-
-
-
-
-
-
 
 
 

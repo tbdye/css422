@@ -12,6 +12,7 @@ START   ORG     $7000
         ADDI.B  #$FF,D0     ; 0600 00FF - ADDI
         ADDI.B  #1,D0       ; 5200 - ADDQ (need to add)
         AND.B   D0,D1       ; C200 - AND
+        ANDI.B  #1,D0       ; 0200 0001 - ANDI
         ASR.B   #1,D0       ; E200 - SHIFT_ROT
         BCC.B   test1       ; 6446 - BCC
 one     BGT     test2       ; 6E00 0042 - BCC
@@ -39,7 +40,6 @@ three   CLR.B   D0          ; 4200 - CLR
         SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
 
 * Optional opcodes here
-        ;ANDI.B  #1,D0       ; 0200 0001 - ANDI
         ;ASL.B   #1,D0       ; E300 - SHIFT_ROT
         ;BCHG.L  #1,D0       ; 0840 0001 - BIT_OP
         ;DIVS.W  #1,D1       ; 83FC 0001 - DIVS
@@ -56,6 +56,7 @@ test4   RTS
 msg     DC.B    'test5',0
 
         END     START       ; last line of source
+
 
 
 

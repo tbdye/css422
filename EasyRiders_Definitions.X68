@@ -58,6 +58,7 @@ DISP_SUBQ       DC.B    'SUBQ',0
 
 * Printed Symbols
 *---------------Opcode--Operands------------Comments---------------------------
+DISP_OCTOTHORPE DC.B    '#',0
 DISP_DOLLAR     DC.B    '$',0
 DISP_MINUS      DC.B    '-',0
 DISP_PLUS       DC.B    '+',0
@@ -96,6 +97,7 @@ DEST_MODE       DS.W    1                   ;Storage for the destination EA mode
 DEST_REGISTER   DS.W    1                   ;Storage for the destination EA register ID
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
 INPUT_LOC       DS.L    1                   ;Location to read input data
+
 
 
 *~Font name~Courier New~
