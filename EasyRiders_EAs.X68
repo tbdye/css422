@@ -180,7 +180,17 @@ EA_AbsLong_001  LEA     DISP_DOLLAR,A1
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
 EA_Immed_100    *immediate data
-                *figure out how long the current commad is
+
+                LEA     DISP_OCTOTHORPE,A1  *immediate data is signified by a pound sign
+                MOVE.B  #14,D0
+                TRAP    #15   
+
+                LEA     DISP_DOLLAR,A1      *All imediate data will be printed as hex
+                MOVE.B  #14,D0
+                TRAP    #15
+
+
+                *figure out how long the current commad is                
                 
                 CMP.B   #1, D4  *For number in D4, 0 = .B, 1 = .W, 2 = .L
                 BGT     Immed_Long
