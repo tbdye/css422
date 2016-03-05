@@ -138,7 +138,8 @@ SR_PrintEA      MOVE.W  SRC_MODE,D2
                 RTS
                               
 * Print in Hex ----------------------------------------------------------------
-* Number of digits = 32-D5/4
+* Number to be printed - D7
+* Number of digits = (32-D5)/4
 *---------------Opcode--Operands------------Comments---------------------------
 
 *   Load the address to be printed into D6
