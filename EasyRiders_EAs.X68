@@ -9,7 +9,7 @@
 *------------------------------------------------------------------------------
 * Decode Effective Address ----------------------------------------------------
 * Determines and prints the effective address mode and register of six bits
-* Registers in : D2(mode), D3(register)
+* Registers in : D2(mode), D3(register), D4(op size)
 * Registers out: none
 *---------------Opcode--Operands------------Comments---------------------------
 EA_Decode_EA    LEA     EA_ModeTable,A3     ;Load jump table to A3
@@ -181,8 +181,29 @@ EA_AbsLong_001  LEA     DISP_DOLLAR,A1
 *---------------Opcode--Operands------------Comments---------------------------
 EA_Immed_100    *immediate data
                 *figure out how long the current commad is
-                ADDA.W  #2,A2 *added for testing
+                
+                CMP.B   #1, D4  *For number in D4, 0 = .B, 1 = .W, 2 = .L
+                BGT     Immed_Long
+                
+                ADDA.W  #2, A3
+                MOVE.W  (A3),D7
+                MOVE.B  #16,D5
+                
+                JSR     SR_PrintHex
+
+                ADDA.W  #2,A2 *Advance over extension word
                 RTS
+
+Immed_Long      ADDA.W  #2,A3
+                MOVE.L  (A3),D7
+                MOVE.B  #0,D5
+
+                JSR     SR_PrintHex
+
+                ADDA.W  #4,A2 *Advance over extension words
+                RTS                
+                
+                
 
 * Invalid EA ------------------------------------------------------------------
 * Brief description of operation
@@ -200,3 +221,4 @@ EA_INVALID      RTS                         ;This should throw an error with out
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
