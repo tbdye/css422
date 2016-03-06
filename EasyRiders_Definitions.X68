@@ -95,7 +95,8 @@ SRC_MODE        DS.W    1                   ;Storage for the source EA mode type
 SRC_REGISTER    DS.W    1                   ;Storage for the source EA register ID
 DEST_MODE       DS.W    1                   ;Storage for the destination EA mode type
 DEST_REGISTER   DS.W    1                   ;Storage for the destination EA register ID
-OP_SIZE         DS.B    1                   ;Storage for the size of the current opword (for EA decode
+OP_SIZE         DS.B    1                   ;Storage for the size of the current opword (for EA decode)
+CURRENT_LOC     DS.W    1                   ;Safe storage for current op word being processed
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
 INPUT_LOC       DS.L    1                   ;Location to read input data
 
@@ -104,3 +105,4 @@ INPUT_LOC       DS.L    1                   ;Location to read input data
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
