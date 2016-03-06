@@ -358,33 +358,72 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 LEA     DISP_SIZE_B,A1
                 MOVE.B  #14,D0
                 TRAP    #15
-            
-                JSR     SR_PrintTab
-            
+                
+                MOVE.B  #0,OP_SIZE               *Store size for EA decode
+                                     
+                BRA     MOVE_Basic
+                
+    
+* Move Data from Source to Destination - Long ---------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+OP_MOVE_L       LEA     DISP_MOVE,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                LEA     DISP_SIZE_L,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #2,OP_SIZE              *Store size for EA decode       
+                
+                BRA     MOVE_Basic
+
+* Move Data from Source to Destination - Word ---------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+OP_MOVE_W       LEA     DISP_MOVE,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                LEA     DISP_SIZE_W,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #1,OP_SIZE               *Store size for EA decode
+                
+                BRA     MOVE_Basic
+                
+                
+*MOVE_Basic - all of the code that MOVE.B, MOVE.W, and MOVE.L share in common 
+*---------------Opcode--Operands------------Comments---------------------------
+MOVE_Basic      JSR     SR_PrintTab
+
+                MOVE.W  (A2),CURRENT_LOC
                 MOVE.B  #13,D4
             
-                MOVE.W  (A2),D2
+                MOVE.W  CURRENT_LOC,D2
                 MOVE.B  #10,D5
                 LSL.W   D5,D2
                 LSR.W   D4,D2
             
-                MOVE.W  (A2),D3
+                MOVE.W  CURRENT_LOC,D3
                 MOVE.B  #13,D5
                 LSL.W   D5,D3
                 LSR.W   D4,D3
             
                 JSR     EA_Decode_EA
 
+                MOVE.B  #13,D4
+                
                 LEA     DISP_COMMA,A1
                 MOVE.B  #14,D0
                 TRAP    #15
             
-                MOVE.W  (A2),D2
+                MOVE.W  CURRENT_LOC,D2
                 MOVE.B  #7,D5
                 LSL.W   D5,D2
                 LSR.W   D4,D2
             
-                MOVE.W  (A2),D3
+                MOVE.W  CURRENT_LOC,D3
                 MOVE.B  #4,D5
                 LSL.W   D5,D3
                 LSR.W   D4,D3
@@ -400,23 +439,10 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 CLR.L   D4
                 CLR.L   D5
                 CLR.L   D6
-                       
-                RTS
+                CLR.L   D7
                 
-    BRA     OP_INVALID
-* Move Data from Source to Destination - Long ---------------------------------
-*---------------Opcode--Operands------------Comments---------------------------
-OP_MOVE_L       LEA     DISP_MOVE,A1
-                MOVE.B  #13,D0
-                TRAP    #15
                 RTS
 
-* Move Data from Source to Destination - Word ---------------------------------
-*---------------Opcode--Operands------------Comments---------------------------
-OP_MOVE_W       LEA     DISP_MOVE,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
 
 * Move Multiple Registers -----------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
