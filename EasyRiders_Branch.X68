@@ -38,10 +38,10 @@ BRANCH_0        JSR     SR_Eval11to8        ;Reads A2, Returns D7
 
                 CMP.B   #$2,D7
                 BEQ     OP_ANDI             ;$2
-                CMP.B   #$6,D7
-                BEQ     OP_ADDI             ;$3
                 CMP.B   #$4,D7
                 BEQ     OP_SUBI             ;$4
+                CMP.B   #$6,D7
+                BEQ     OP_ADDI             ;$6
                 CMP.B   #$8,D7
                 BEQ     OP_BCHG             ;$8
                 CMP.B   #$C,D7
@@ -248,6 +248,7 @@ BRANCH_4E7      JSR     SR_Eval3to0         ;Reads A2, Returns D7
                 BEQ     OP_RTS              ;$5
                 
                 BRA     OP_INVALID          ;No matches found
+
 
 
 *~Font name~Courier New~
