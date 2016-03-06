@@ -397,14 +397,15 @@ OP_MOVE_W       LEA     DISP_MOVE,A1
 *---------------Opcode--Operands------------Comments---------------------------
 MOVE_Basic      JSR     SR_PrintTab
 
+                MOVE.W  (A2),CURRENT_LOC
                 MOVE.B  #13,D4
             
-                MOVE.W  (A2),D2
+                MOVE.W  CURRENT_LOC,D2
                 MOVE.B  #10,D5
                 LSL.W   D5,D2
                 LSR.W   D4,D2
             
-                MOVE.W  (A2),D3
+                MOVE.W  CURRENT_LOC,D3
                 MOVE.B  #13,D5
                 LSL.W   D5,D3
                 LSR.W   D4,D3
@@ -417,12 +418,12 @@ MOVE_Basic      JSR     SR_PrintTab
                 MOVE.B  #14,D0
                 TRAP    #15
             
-                MOVE.W  (A2),D2
+                MOVE.W  CURRENT_LOC,D2
                 MOVE.B  #7,D5
                 LSL.W   D5,D2
                 LSR.W   D4,D2
             
-                MOVE.W  (A2),D3
+                MOVE.W  CURRENT_LOC,D3
                 MOVE.B  #4,D5
                 LSL.W   D5,D3
                 LSR.W   D4,D3
@@ -438,6 +439,7 @@ MOVE_Basic      JSR     SR_PrintTab
                 CLR.L   D4
                 CLR.L   D5
                 CLR.L   D6
+                CLR.L   D7
                 
                 RTS
 
