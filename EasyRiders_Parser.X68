@@ -80,11 +80,8 @@ cpReturn        JSR     SR_PrintAddr
                 MULU    #6,D7               ;Form offset to travel on jump table 
                 JSR     0(A0,D7)            ;Jump to appropriate opcode, then return
                 
-                CMP.W   A2,A6               ;Check if end of input machine code has been reached
-                BEQ     Fn_Terminate        ;Exit the loop.
-                
-                CMP.W   A6,A2               ;Check if we've gone beyond the ending
-                BGT     Fn_Terminate        ;Exit the loop.
+                CMP.W   A6,A2               ;Check if end of input machine code has been reached
+                BGE     Fn_Terminate        ;Exit the loop.
                 
                 ADDA.W  #2,A2               ;Advance to next opcode
                 BRA     cpLoop
@@ -117,6 +114,8 @@ Fn_Terminate    LEA     MSG_RESTART,A1      ;Store the console message for outpu
                 BEQ     FN_InputLoop        ;Restart the program
 
                 BRA     END_PROGRAM
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
