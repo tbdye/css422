@@ -323,6 +323,7 @@ OP_INVALID      LEA     DISP_INVALID,A1
                 MOVE.B  #28,D4              ;char shift
                 MOVE.W  (A2),D7
                 CLR.L   D5                  ;bugfix
+                MOVE.B  #16,D5
                 JSR     SR_PrintHex
                 
                 LEA     MSG_LINEBREAK,A1
