@@ -261,15 +261,50 @@ OP_BLE          ADDA.W  #2,A2               ;Need to advance input for testing
 * Clear an Operand ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CLR          LEA     DISP_CLR,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+
+                MOVE.B  D7,D4               ;Store size for EA decoding
+                
+                *   Print size
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                JSR     SR_Eval5to3         ;Returns op mode in D7
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0         ;Returns op register in D7
+                MOVE.B  D7,D3
+                
+                JSR     EA_Decode_EA        ;Prints EA information
                 RTS
+
 
 * Compare ---------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CMP          LEA     DISP_CMP,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_Eval7to6
+                MOVE.B  D7,D4
+                JSR     SR_PrntSize2bit
+                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                JSR     EA_Decode_EA
+                
+                JSR     SR_Eval11to9
+                MOVE.B  D7,D3
+                
+                MOVE.B  #0,D2
+                
+                JSR     EA_Decode_EA
                 RTS
 
 * Compare Immediate -----------------------------------------------------------
@@ -307,6 +342,7 @@ OP_INVALID      LEA     DISP_INVALID,A1
                 MOVE.B  #28,D4              ;char shift
                 MOVE.W  (A2),D7
                 CLR.L   D5                  ;bugfix
+                MOVE.B  #16,D5
                 JSR     SR_PrintHex
                 
                 LEA     MSG_LINEBREAK,A1
@@ -316,20 +352,44 @@ OP_INVALID      LEA     DISP_INVALID,A1
 
 * Jump to Subroutine ----------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_JSR          ADDA.W  #2,A2               ;Need to advance input for testing
-                ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_JSR,A1
-                MOVE.B  #13,D0
+OP_JSR          LEA     DISP_JSR,A1
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_PrintTab
+                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                MOVE.B  #2,D4
+                
+                JSR     EA_Decode_EA
                 RTS
 
 * Load Effective Address ------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LEA          ADDA.W  #2,A2               ;Need to advance input for testing
-                ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_LEA,A1
-                MOVE.B  #13,D0
+OP_LEA          LEA     DISP_LEA,A1
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_PrintTab
+                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                MOVE.B  #2,D4
+                
+                JSR     SR_Eval11to9
+                MOVE.B  D7,D3
+                MOVE.B  #1,D2               *LEA always loads into an address register directly
+                
+                JSR     EA_Decode_EA
                 RTS
 
 * Logical Shift Left ----------------------------------------------------------
