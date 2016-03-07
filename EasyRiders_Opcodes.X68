@@ -397,15 +397,15 @@ OP_MOVE_W       LEA     DISP_MOVE,A1
 *---------------Opcode--Operands------------Comments---------------------------
 MOVE_Basic      JSR     SR_PrintTab
 
-                MOVE.W  (A2),CURRENT_LOC
+                MOVE.W  (A2),CURRENT_OP
                 MOVE.B  #13,D4
             
-                MOVE.W  CURRENT_LOC,D2
+                MOVE.W  CURRENT_OP,D2
                 MOVE.B  #10,D5
                 LSL.W   D5,D2
                 LSR.W   D4,D2
             
-                MOVE.W  CURRENT_LOC,D3
+                MOVE.W  CURRENT_OP,D3
                 MOVE.B  #13,D5
                 LSL.W   D5,D3
                 LSR.W   D4,D3
@@ -418,12 +418,12 @@ MOVE_Basic      JSR     SR_PrintTab
                 MOVE.B  #14,D0
                 TRAP    #15
             
-                MOVE.W  CURRENT_LOC,D2
+                MOVE.W  CURRENT_OP,D2
                 MOVE.B  #7,D5
                 LSL.W   D5,D2
                 LSR.W   D4,D2
             
-                MOVE.W  CURRENT_LOC,D3
+                MOVE.W  CURRENT_OP,D3
                 MOVE.B  #4,D5
                 LSL.W   D5,D3
                 LSR.W   D4,D3
@@ -592,9 +592,52 @@ OP_SIMHALT      BRA     OP_INVALID
 * Subtract --------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SUB          LEA     DISP_SUB,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                BTST    #8,(A2)             
+                BEQ     opSubDnMode         ;Bit 8 = 0
+                
+                BRA     opSubEAMode         ;Bit 8 = 1
+                
+*   SUB Dn - <ea> --> Dn
+opSubDnMode     JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to decode src mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+                
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+                BRA     opSubPrintEA
+
+*   SUB Dn + <ea> --> <ea>
+opSubEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_MODE        ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+
+*   Print source and destination EA
+opSubPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                
                 RTS
+                
+                   
+
 
 * Subtract Address ------------------------------------------------------------
 * Optional opcode that is not required by this assignment
