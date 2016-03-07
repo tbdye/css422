@@ -101,19 +101,22 @@ FN_PauseOutput  LEA     MSG_PAUSE,A1
 
 * Terminate -------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-Fn_Terminate
+Fn_Terminate    LEA     MSG_RESTART,A1      ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
+*   Get User Input
+                LEA     INPUT_BUFFER,A1     ;Raw input will store at INPUT_BUFFER
+                MOVE.B  #2,D0               ;Read string from keyboard to A1
+                TRAP    #15                 ;Get the user input from console, length in D1
+                
+                MOVE.B  #4,LINECOUNT        ;Reset counter to 4 (question + prompts)
 
+                MOVE.L  INPUT_BUFFER,D7         
+                CMPI.L  #$79657300,D7       ;Match for ASCII value of 'yes'
+                BEQ     FN_InputLoop        ;Restart the program
 
                 BRA     END_PROGRAM
-
-
-
-
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
