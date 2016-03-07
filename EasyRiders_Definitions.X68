@@ -43,7 +43,7 @@ DISP_CMP        DC.B    'CMP',0
 DISP_CMPI       DC.B    'CMPI',0
 DISP_DIVS       DC.B    'DIVS',0
 DISP_DIVU       DC.B    'DIVU',0
-DISP_INVALID    DC.B    'INVALID, got: ',0
+DISP_INVALID    DC.B    'DATA ',0         *REMINDER: Label changed without changing name
 DISP_JSR        DC.B    'JSR',0
 DISP_LEA        DC.B    'LEA',0
 DISP_LSL        DC.B    'LSL',0
