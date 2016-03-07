@@ -11,18 +11,19 @@ START           ORG     $1000               ;Load at this address
 
                 INCLUDE 'EasyRiders_Parser.X68'
 
-TERMINATE       SIMHALT                     ;Halt the simulator
+END_PROGRAM     SIMHALT                     ;Halt the simulator
 
 *------------------------------------------------------------------------------
 
                 INCLUDE 'EasyRiders_Branch.X68'
                 INCLUDE 'EasyRiders_Opcodes.X68'
-                INCLUDE 'EasyRiders_Functions.X68'
                 INCLUDE 'EasyRiders_Subroutines.X68'
                 INCLUDE 'EasyRiders_EAs.X68'
                 INCLUDE 'EasyRiders_Definitions.X68'
 
                 END     START               ;Do not put anything below this line.
+
+
 
 *~Font name~Courier New~
 *~Font size~10~

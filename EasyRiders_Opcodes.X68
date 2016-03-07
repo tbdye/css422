@@ -580,12 +580,14 @@ opShRoDone      LEA     MSG_LINEBREAK,A1    ;Store the console message for outpu
 
 * PseudoOp Simhalt ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SIMHALT      LEA     DISP_SIMHALT,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                MOVE.B  #1,BOOL_FINISHED    ;Mark that input machine code ended
+OP_SIMHALT      BRA     OP_INVALID
                 
-                RTS
+                ;LEA     DISP_SIMHALT,A1
+                ;MOVE.B  #13,D0
+                ;TRAP    #15
+                ;MOVE.B  #1,BOOL_FINISHED    ;Mark that input machine code ended
+                
+                ;RTS
 
 * Subtract --------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
@@ -619,6 +621,7 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
 
 
 
