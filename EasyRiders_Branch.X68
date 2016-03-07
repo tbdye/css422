@@ -42,15 +42,8 @@ BRANCH_0        JSR     SR_Eval11to8        ;Reads A2, Returns D7
                 BEQ     OP_SUBI             ;$4
                 CMP.B   #$6,D7
                 BEQ     OP_ADDI             ;$6
-                CMP.B   #$8,D7
-                BEQ     OP_BCHG             ;$8
                 CMP.B   #$C,D7
                 BEQ     OP_CMPI             ;$C
-
-                JSR     SR_Eval7to6         ;Reads A2, Returns D7
-                
-                CMP.B   #%01,D7
-                BEQ     OP_BCHG             ;%01
 
                 BRA     OP_INVALID          ;No matches found
 
@@ -63,18 +56,15 @@ BRANCH_4        JSR     SR_Eval11to8        ;Reads A2, Returns D7
                 
                 CMP.B   #$2,D7
                 BEQ     OP_CLR              ;$2
-                CMP.B   #$4,D7
-                BEQ     OP_SUBI             ;$4
                 CMP.B   #$E,D7
                 BEQ     BRANCH_4E           ;$E
-                
                 
                 JSR     SR_Eval11to6        ;Reads A2, Returns D7
                 ANDI.B  #%00100010,D7       ;Mask out bits where index = 0 for eval
                 
                 CMP.B   #%00100010,D7
                 BEQ     OP_MOVEM            ;%1x001x
-                
+
                 JSR     SR_Eval11to6        ;Reads A2, Returns D7
                 ANDI.B  #%00000111,D7       ;Mask out bits where index = 0 for eval
                 
@@ -132,12 +122,16 @@ BRANCH_8        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_9        JSR     SR_Eval8to6         ;Reads A2, Returns D7
+BRANCH_9        JSR     SR_Eval7to6         ;Reads A2, Returns D7
 
-                CMP.B   #%011,D7
-                BEQ     OP_SUBA             ;%011
-                CMP.B   #%111,D7
-                BEQ     OP_SUBA             ;%111
+                CMP.B   #%11,D7
+                BEQ     OP_SUBA             ;%11
+
+                JSR     SR_Eval8to4         ;Reads A2, Returns D7
+                ANDI.B  #%00010011,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00010000,D7
+                BEQ     OP_INVALID          ;%1xx00 - Op not supported
                 
                 BRA     OP_SUB              ;All other combinations
 
@@ -169,6 +163,18 @@ BRANCH_C        JSR     SR_Eval8to6         ;Reads A2, Returns D7
                 CMP.B   #%111,D7
                 BEQ     OP_MULS             ;%111
                 
+                JSR     SR_Eval8to4         ;Reads A2, Returns D7
+                ANDI.B  #%00011111,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00010000,D7
+                BEQ     OP_INVALID          ;%10000 - Op not supported
+                
+                JSR     SR_Eval8to4         ;Reads A2, Returns D7
+                ANDI.B  #%00010011,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00010000,D7
+                BEQ     OP_INVALID          ;%1xx00 - Op not supported
+                
                 BRA     OP_AND              ;All other combinations
 
 * From Root to Branch D -------------------------------------------------------
@@ -176,12 +182,16 @@ BRANCH_C        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to6)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_D        JSR     SR_Eval8to6         ;Reads A2, Returns D7
+BRANCH_D        JSR     SR_Eval8to4         ;Reads A2, Returns D7
+                ANDI.B  #%00010011,D7       ;Mask out bits where index = 0 for eval
 
-                CMP.B   #%011,D7
-                BEQ     OP_ADDA             ;%011
-                CMP.B   #%111,D7
-                BEQ     OP_ADDA             ;%111
+                CMP.B   #%00010000,D7
+                BEQ     OP_INVALID          ;%1xx00 - Op not supported
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+
+                CMP.B   #%11,D7
+                BEQ     OP_ADDA             ;%11
                 
                 BRA     OP_ADD              ;All other combinations
 
@@ -248,6 +258,9 @@ BRANCH_4E7      JSR     SR_Eval3to0         ;Reads A2, Returns D7
                 BEQ     OP_RTS              ;$5
                 
                 BRA     OP_INVALID          ;No matches found
+
+
+
 
 
 
