@@ -351,11 +351,25 @@ OP_JSR          LEA     DISP_JSR,A1
 
 * Load Effective Address ------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LEA          ADDA.W  #2,A2               ;Need to advance input for testing
-                ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_LEA,A1
-                MOVE.B  #13,D0
+OP_LEA          LEA     DISP_LEA,A1
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_PrintTab
+                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                MOVE.B  #2,D4
+                
+                JSR     SR_Eval11to9
+                MOVE.B  D7,D3
+                MOVE.B  #1,D2               *LEA always loads into an address register directly
+                
+                JSR     EA_Decode_EA
                 RTS
 
 * Logical Shift Left ----------------------------------------------------------
