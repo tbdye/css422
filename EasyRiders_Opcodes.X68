@@ -261,9 +261,25 @@ OP_BLE          ADDA.W  #2,A2               ;Need to advance input for testing
 * Clear an Operand ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CLR          LEA     DISP_CLR,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+
+                MOVE.B  D7,D4               ;Store size for EA decoding
+                
+                *   Print size
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                JSR     SR_Eval5to3         ;Returns op mode in D7
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0         ;Returns op register in D7
+                MOVE.B  D7,D3
+                
+                JSR     EA_Decode_EA        ;Prints EA information
                 RTS
+
 
 * Compare ---------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
