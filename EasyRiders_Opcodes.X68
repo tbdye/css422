@@ -332,11 +332,21 @@ OP_INVALID      LEA     DISP_INVALID,A1
 
 * Jump to Subroutine ----------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_JSR          ADDA.W  #2,A2               ;Need to advance input for testing
-                ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_JSR,A1
-                MOVE.B  #13,D0
+OP_JSR          LEA     DISP_JSR,A1
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_PrintTab
+                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                MOVE.B  #2,D4
+                
+                JSR     EA_Decode_EA
                 RTS
 
 * Load Effective Address ------------------------------------------------------
