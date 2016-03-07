@@ -284,8 +284,27 @@ OP_CLR          LEA     DISP_CLR,A1
 * Compare ---------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CMP          LEA     DISP_CMP,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                JSR     SR_Eval7to6
+                MOVE.B  D7,D4
+                JSR     SR_PrntSize2bit
+                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                JSR     EA_Decode_EA
+                
+                JSR     SR_Eval11to9
+                MOVE.B  D7,D3
+                
+                MOVE.B  #0,D2
+                
+                JSR     EA_Decode_EA
                 RTS
 
 * Compare Immediate -----------------------------------------------------------
