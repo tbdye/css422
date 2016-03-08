@@ -12,7 +12,7 @@
                 MOVE.B  #13,D0              ;Will display from A1 with CR,LF.
                 TRAP    #15                 ;Display to console.
                 
-                MOVE.B  #5,LINECOUNT        ;Initialize counter to 5 (welcome + prompts)
+                MOVE.B  #7,LINECOUNT        ;Initialize counter (welcome + prompts)
 
 * Get Input -------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------                
@@ -33,6 +33,10 @@ FN_InputLoop    LEA     MSG_LOC_START,A1    ;Store the console message for outpu
                 JSR     SR_AtoHLoop         ;Convert raw input ascii characters to hex
                 MOVE.L  D7,DATA_START_LOC   ;Store hex value user data location
                 
+                LEA     MSG_LINEBREAK,A1    ;Append linefeed to the end of user input
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
 *   Display end location prompt
                 LEA     MSG_LOC_END,A1      ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
@@ -50,6 +54,10 @@ FN_InputLoop    LEA     MSG_LOC_START,A1    ;Store the console message for outpu
                 JSR     SR_AtoHLoop         ;Convert raw input ascii characters to hex
                 MOVE.L  D7,DATA_END_LOC     ;Store hex value user data location
                 
+                LEA     MSG_LINEBREAK,A1    ;Append linefeed to the end of user input
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
                 BRA     FN_Cmd_Parser
 
 * Command Parser --------------------------------------------------------------
@@ -66,7 +74,7 @@ FN_Cmd_Parser   LEA     ROOT_JMP_TABLE,A0   ;Index into the table
                 MOVEA.L DATA_START_LOC,A2   ;Point to the location of beginning test data
                 MOVEA.L DATA_END_LOC,A6     ;Point to the location of ending test data
                 
-cpLoop          CMPI.B  #30,LINECOUNT       ;Pause output if screen lines = 30
+cpLoop          CMPI.B  #29,LINECOUNT       ;Pause output if screen lines = 29
                 BEQ     FN_PauseOutput
                 
 cpReturn        JSR     SR_PrintAddr
@@ -107,13 +115,28 @@ Fn_Terminate    LEA     MSG_RESTART,A1      ;Store the console message for outpu
                 MOVE.B  #2,D0               ;Read string from keyboard to A1
                 TRAP    #15                 ;Get the user input from console, length in D1
                 
-                MOVE.B  #4,LINECOUNT        ;Reset counter to 4 (question + prompts)
+                LEA     MSG_LINEBREAK,A1    ;Append linefeed to the end of user input
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                MOVE.B  #5,LINECOUNT        ;Reset counter (question + prompts)
 
                 MOVE.L  INPUT_BUFFER,D7         
                 CMPI.L  #$79657300,D7       ;Match for ASCII value of 'yes'
                 BEQ     FN_InputLoop        ;Restart the program
 
                 BRA     END_PROGRAM
+
+
+
+
+
+
+
+
+
+
+
 
 
 

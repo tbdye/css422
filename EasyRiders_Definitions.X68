@@ -19,7 +19,7 @@ MSG_WELCOME     DC.B    '68K Disassember Final Project',CR,LF
                 DC.B    'CSS 422 Final Project - University of Washington | Bothell',CR,LF,0
 MSG_LOC_START   DC.B    'Test data starts from location: ',0
 MSG_LOC_END     DC.B    'Test data ends at location: ',0
-MSG_PAUSE       DC.B    'Press enter to continue output.',0
+MSG_PAUSE       DC.B    'Press enter to continue output.',CR,LF,0
 MSG_RESTART     DC.B    'End of test data reached.',CR,LF,CR,LF
                 DC.B    'Test another location? (yes/no): ',0
 MSG_LINEBREAK   DC.B    CR,LF,0
@@ -106,6 +106,12 @@ CURRENT_OP      DS.W    1                   ;Safe storage for current op word be
 DATA_START_LOC  DS.L    1                   ;Location to begin reading test data
 DATA_END_LOC    DS.L    1                   ;Location to end reading test data
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+
+
+
+
+
+
 
 
 
