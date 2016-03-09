@@ -43,7 +43,7 @@ DISP_CMP        DC.B    'CMP',0
 DISP_CMPI       DC.B    'CMPI',0
 DISP_DIVS       DC.B    'DIVS',0
 DISP_DIVU       DC.B    'DIVU',0
-DISP_INVALID    DC.B    'DATA ',0         *REMINDER: Label changed without changing name
+DISP_INVALID    DC.B    'DATA',0         *REMINDER: Label changed without changing name
 DISP_JSR        DC.B    'JSR',0
 DISP_LEA        DC.B    'LEA',0
 DISP_LSL        DC.B    'LSL',0
@@ -70,7 +70,7 @@ DISP_MINUS      DC.B    '-',0
 DISP_PLUS       DC.B    '+',0
 DISP_OPAREN     DC.B    '(',0
 DISP_CPAREN     DC.B    ')',0
-DISP_TAB        DC.B    '   ',0
+DISP_SPACE      DC.B    ' ',0
 DISP_COMMA      DC.B    ',',0
 DISP_SIZE_B     DC.B    '.B',0
 DISP_SIZE_L     DC.B    '.L',0
@@ -95,7 +95,7 @@ TABLE_HEXCHAR   DC.B    '0',0
 
 * Defined Storage
 *---------------Opcode--Operands------------Comments---------------------------                
-;BOOL_FINISHED   DS.B    1                   ;Finished reading data
+TAB_LENGTH      DS.B    1                   ;Number of spaces in a tab to print on console
 LINECOUNT       DS.B    1                   ;Storage for number of lines on screen
 SRC_MODE        DS.W    1                   ;Storage for the source EA mode type
 SRC_REGISTER    DS.W    1                   ;Storage for the source EA register ID
@@ -106,6 +106,11 @@ CURRENT_OP      DS.W    1                   ;Safe storage for current op word be
 DATA_START_LOC  DS.L    1                   ;Location to begin reading test data
 DATA_END_LOC    DS.L    1                   ;Location to end reading test data
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+
+
+
+
+
 
 
 

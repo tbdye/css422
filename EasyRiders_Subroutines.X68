@@ -122,6 +122,8 @@ SR_PrintAddr    CLR     D5
                 MOVE.B  #28,D4              ;char shift
                 MOVE.W  A2,D7
                 JSR     SR_PrintHex
+                
+                MOVE.B  #3,TAB_LENGTH       ;Tab length = 3
                 JSR     SR_PrintTab
                 RTS
 
@@ -220,14 +222,32 @@ psDone          MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
 
 psError         MOVEM.L (SP)+,A0-A6/D0-D6   ;Replace registers from stack
                 RTS
+
+* Print linebreak -------------------------------------------------------------
+* Prints a CR,LF at the end of a printed string
+*---------------Opcode--Operands------------Comments---------------------------
+SR_PrintCRLF    LEA     MSG_LINEBREAK,A1
+                MOVE.B  #14,D0
+                TRAP    #15             
+                RTS
                 
 * Print tab -------------------------------------------------------------------
-* Prints a tab at the end of a printed string
+* D7: Number of spaces to print
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintTab     LEA     DISP_TAB,A1
-                MOVE.B  #14,D0
-                TRAP    #15
-                RTS
+SR_PrintTab     CLR.L   D7
+                MOVE.B  TAB_LENGTH,D7       ;Move data to D7 as a decreasing counter
+                
+ptLoopStart     CMP.B   #0,D7               ;If the counter is zero, end the loop.
+                BEQ     ptLoopFinish        ;The loop is not finished, print a space.
+
+                LEA     DISP_SPACE,A1       ;Print a single space on the console
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                SUBQ.B  #1,D7               ;Decrease the loop counter by 1
+                BRA     ptLoopStart
+                
+ptLoopFinish    RTS
 
 * Strip Ascii -----------------------------------------------------------------
 * Remove the ascii code from the digits 0-9,a-f, or A-F
@@ -246,6 +266,17 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
+
+
+
+
+
+
+
+
+
 
 
 
