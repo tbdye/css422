@@ -24,6 +24,61 @@ SR_AtoHLoop     MOVE.B  (A1)+,D0            ; Get the first byte
 athEndLoop      MOVE.L  D1,D7               ; Return hex number in D7
                 RTS
 
+* Check Test Data Start Address -----------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_CheckStart   MOVE.L  DATA_START_LOC,D0
+
+                CMP.L   #$400,D0            ;No addresses below $0400 are allowed. 
+                BLT     csFailAddrLow
+                
+                BTST    #0,D0               ;If the LSB is 1, the address is odd and invalid.
+                BNE     csFailAddrOdd
+
+                MOVE.L  #0,D7               ;D7 == 0 indicates the addr is valid.
+csFinish        RTS
+
+csFailAddrLow   LEA     MSG_ADDR_LOW,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7               ;D7 == 1 indicates the addr is invalid.
+                BRA     csFinish
+                
+csFailAddrOdd   LEA     MSG_ADDR_ODD,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7               ;D7 == 1 indicates the addr is invalid.
+                BRA     csFinish
+
+* Check Test Data End Address -------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_CheckEnd     MOVE.L  DATA_START_LOC,D0
+                MOVE.L  DATA_END_LOC,D1
+                
+                BTST    #0,D1               ;If the LSB is 1, the address is odd and invalid.
+                BNE     ceFailAddrOdd
+                
+                CMP.L   D0,D1               ;The ending addr must be greater than starting addr
+                BLT     ceFailAddrOrder
+
+                MOVE.L  #0,D7               ;D7 == 0 indicates the addr is valid.
+ceFinish        RTS
+
+ceFailAddrOrder LEA     MSG_ADDR_ORDER,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7
+                BRA     ceFinish
+                
+ceFailAddrOdd   LEA     MSG_ADDR_ODD,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7               ;D7 == 1 indicates the addr is invalid.
+                BRA     ceFinish
+
 * Evaluate Bits 2 to 0 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval2to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
@@ -122,6 +177,8 @@ SR_PrintAddr    CLR     D5
                 MOVE.B  #28,D4              ;char shift
                 MOVE.W  A2,D7
                 JSR     SR_PrintHex
+                
+                MOVE.B  #3,TAB_LENGTH       ;Tab length = 3
                 JSR     SR_PrintTab
                 RTS
 
@@ -220,14 +277,32 @@ psDone          MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
 
 psError         MOVEM.L (SP)+,A0-A6/D0-D6   ;Replace registers from stack
                 RTS
+
+* Print linebreak -------------------------------------------------------------
+* Prints a CR,LF at the end of a printed string
+*---------------Opcode--Operands------------Comments---------------------------
+SR_PrintCRLF    LEA     MSG_LINEBREAK,A1
+                MOVE.B  #14,D0
+                TRAP    #15             
+                RTS
                 
 * Print tab -------------------------------------------------------------------
-* Prints a tab at the end of a printed string
+* D7: Number of spaces to print
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintTab     LEA     DISP_TAB,A1
-                MOVE.B  #14,D0
-                TRAP    #15
-                RTS
+SR_PrintTab     CLR.L   D7
+                MOVE.B  TAB_LENGTH,D7       ;Move data to D7 as a decreasing counter
+                
+ptLoopStart     CMP.B   #0,D7               ;If the counter is zero, end the loop.
+                BEQ     ptLoopFinish        ;The loop is not finished, print a space.
+
+                LEA     DISP_SPACE,A1       ;Print a single space on the console
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                SUBQ.B  #1,D7               ;Decrease the loop counter by 1
+                BRA     ptLoopStart
+                
+ptLoopFinish    RTS
 
 * Strip Ascii -----------------------------------------------------------------
 * Remove the ascii code from the digits 0-9,a-f, or A-F
@@ -246,6 +321,37 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

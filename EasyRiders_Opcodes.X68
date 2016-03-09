@@ -1,3 +1,4 @@
+
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
@@ -21,6 +22,7 @@ OP_ADD          LEA     DISP_ADD,A1         ;Store the console message for outpu
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
 *   Print size
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 BTST    #8,(A2)             
@@ -55,7 +57,8 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
 *   Print source and destination EA
-opAddPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+opAddPrintEA    MOVE.L  #5,D7
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 
                 RTS
 
@@ -72,6 +75,7 @@ OP_ADDA         LEA     DISP_ADDA,A1        ;Store the console message for outpu
                 JSR     SR_Eval8to6         ;Reads A2, Returns D7
 
 *   Print size                
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize3bit     ;Reads D7, Returns void
                 
                 JSR     SR_Eval5to3         ;Reads A2, Returns D7
@@ -102,7 +106,8 @@ OP_ADDI         LEA     DISP_ADDI,A1        ;Store the console message for outpu
                 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
-*   Print size                
+*   Print size  
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA              
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 MOVE.W  #7,SRC_MODE         ;Force Absolute Short/Long/Immediate Data
@@ -141,6 +146,7 @@ OP_AND          LEA     DISP_AND,A1         ;Store the console message for outpu
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
 *   Print size
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 BTST    #8,(A2)             
@@ -193,6 +199,7 @@ OP_ANDI         LEA     DISP_ANDI,A1        ;Store the console message for outpu
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
 *   Print size                
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 MOVE.W  #7,SRC_MODE         ;Force Absolute Short/Long/Immediate Data
@@ -269,6 +276,7 @@ OP_CLR          LEA     DISP_CLR,A1
                 MOVE.B  D7,D4               ;Store size for EA decoding
                 
                 *   Print size
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 JSR     SR_Eval5to3         ;Returns op mode in D7
@@ -278,6 +286,8 @@ OP_CLR          LEA     DISP_CLR,A1
                 MOVE.B  D7,D3
                 
                 JSR     EA_Decode_EA        ;Prints EA information
+                
+                JSR     SR_PrintCRLF
                 RTS
 
 
@@ -289,6 +299,8 @@ OP_CMP          LEA     DISP_CMP,A1
                 
                 JSR     SR_Eval7to6
                 MOVE.B  D7,D4
+                
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit
                 
                 JSR     SR_Eval5to3
@@ -305,6 +317,8 @@ OP_CMP          LEA     DISP_CMP,A1
                 MOVE.B  #0,D2
                 
                 JSR     EA_Decode_EA
+                
+                JSR     SR_PrintCRLF
                 RTS
 
 * Compare Immediate -----------------------------------------------------------
@@ -339,15 +353,16 @@ OP_INVALID      LEA     DISP_INVALID,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
+                MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab
+                
                 MOVE.B  #28,D4              ;char shift
                 MOVE.W  (A2),D7
                 CLR.L   D5                  ;bugfix
                 MOVE.B  #16,D5
                 JSR     SR_PrintHex
                 
-                LEA     MSG_LINEBREAK,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+                JSR     SR_PrintCRLF
                 RTS
 
 * Jump to Subroutine ----------------------------------------------------------
@@ -356,6 +371,7 @@ OP_JSR          LEA     DISP_JSR,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
+                MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab
                 
                 JSR     SR_Eval5to3
@@ -367,6 +383,8 @@ OP_JSR          LEA     DISP_JSR,A1
                 MOVE.B  #2,D4
                 
                 JSR     EA_Decode_EA
+                
+                JSR     SR_PrintCRLF
                 RTS
 
 * Load Effective Address ------------------------------------------------------
@@ -375,6 +393,7 @@ OP_LEA          LEA     DISP_LEA,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
+                MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab
                 
                 JSR     SR_Eval5to3
@@ -390,6 +409,8 @@ OP_LEA          LEA     DISP_LEA,A1
                 MOVE.B  #1,D2               *LEA always loads into an address register directly
                 
                 JSR     EA_Decode_EA
+                
+                JSR     SR_PrintCRLF
                 RTS
 
 * Logical Shift Left ----------------------------------------------------------
@@ -455,7 +476,8 @@ OP_MOVE_W       LEA     DISP_MOVE,A1
                 
 *MOVE_Basic - all of the code that MOVE.B, MOVE.W, and MOVE.L share in common 
 *---------------Opcode--Operands------------Comments---------------------------
-MOVE_Basic      JSR     SR_PrintTab
+MOVE_Basic      MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab
 
                 MOVE.W  (A2),CURRENT_OP
                 MOVE.B  #13,D4
@@ -490,9 +512,7 @@ MOVE_Basic      JSR     SR_PrintTab
 
                 JSR     EA_Decode_EA
             
-                LEA     MSG_LINEBREAK,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+                JSR     SR_PrintCRLF
                 
                 CLR.L   D2                  ;Clean up
                 CLR.L   D3
@@ -562,6 +582,7 @@ OP_RTS          LEA     DISP_RTS,A1
 OP_ShiftRot     JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
 *   Print size                
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 CMP.B   #%11,D7
@@ -632,10 +653,7 @@ opShRoRegister  MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 RTS
 
 *   Print memory address
-opShRoDone      LEA     MSG_LINEBREAK,A1    ;Store the console message for output.
-                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
-                TRAP    #15                 ;Display to console.
-                
+opShRoDone      JSR     SR_PrintCRLF
                 RTS
 
 * PseudoOp Simhalt ------------------------------------------------------------
@@ -658,6 +676,7 @@ OP_SUB          LEA     DISP_SUB,A1
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
 *   Print size
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
                 BTST    #8,(A2)             
@@ -695,9 +714,6 @@ opSubEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
 opSubPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 
                 RTS
-                
-                   
-
 
 * Subtract Address ------------------------------------------------------------
 * Optional opcode that is not required by this assignment
@@ -724,6 +740,14 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
+
+
+
+
+
+
+
 
 
 
