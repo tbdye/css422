@@ -265,19 +265,38 @@ OP_BccGroup     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
                 MOVE.L  #2,D6               ;Number of characters to display.
                 JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
                 
-                JSR     SR_PrintCRLF
+bgFinish        JSR     SR_PrintCRLF
                 RTS
 
 bg16bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
 
+                MOVEA.L A2,A3               ;Copy the current instruction pointer location
+                
+                ADDA.W  #2,A3               ;The next word contains the absolute data.
+                
+                MOVE.W  (A3),D7             ;Prepare to print the data.
+                MOVE.L  #4,D6               ;Number of characters to display
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+                ADDA.W  #2,A2               ;Advance the instruction pointer.
+                
+                BRA     bgFinish
 
-                JSR     SR_PrintCRLF
-                RTS
+bg32bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
 
-bg32bit         JSR     SR_PrintCRLF
-                RTS
+                MOVEA.L A2,A3               ;Copy the current instruction pointer location
+                
+                ADDA.W  #2,A3               ;The next word contains the absolute data.
+                
+                MOVE.W  (A3),D7             ;Prepare to print the data.
+                MOVE.L  #8,D6               ;Number of characters to display
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+                ADDA.W  #4,A2               ;Advance the instruction pointer.
 
+                BRA     bgFinish
 
 * Test a Bit and Change -------------------------------------------------------
 * Optional opcode that is not required by this assignment
@@ -771,6 +790,7 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
 
 
 
