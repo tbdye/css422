@@ -202,11 +202,15 @@ SR_PrintEA      MOVE.W  SRC_MODE,D2
                 RTS
                               
 * Print in Hex ----------------------------------------------------------------
+* Convert hex values to ASCII and display them to the console.  The number of
+*   characters displayed is specified by D6, where valid ranges are 0 to 8 in
+*   decimal.
+*   Example:  $00001112 displaying two characters will print '12'.
 * Registers:
 * D6: Digits to print (from right to left)
 * D7: Data to print                
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintHex     MOVEM.L D3-D5,-(SP)         ;Store registers to stack
+SR_PrintHex     MOVEM.L D3-D6,-(SP)         ;Store registers to stack
                 
                 LEA     TABLE_HEXCHAR,A3
                 MULU.W  #4,D6               ;Convert number of digits to total bits
@@ -229,7 +233,7 @@ phLoop          MOVE.L  D7,D5               ;Load/reload hex output into D5 for 
                 CMP.B   #32,D3              ;If displacement = 32, we're done.
                 BNE     phLoop
 
-                MOVEM.L (SP)+,D3-D5         ;Replace registers from stack
+                MOVEM.L (SP)+,D3-D6         ;Replace registers from stack
                 RTS
 
 * Print .B, .W, or .L ---------------------------------------------------------
@@ -321,6 +325,7 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
 
 
 

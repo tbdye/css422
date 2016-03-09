@@ -57,8 +57,7 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
 *   Print source and destination EA
-opAddPrintEA    MOVE.L  #5,D7
-                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+opAddPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 
                 RTS
 
@@ -257,19 +256,23 @@ OP_BccGroup     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
                 TRAP    #15                 ;Display to console.
                 
                 MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
-                JSR     SR_PrintTab         
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
                 
                 MOVE.W  (A2),D5             ;Reload full opcode for evaluation
                 CLR.L   D7
                 MOVE.B  D5,D7               ;Evaluate last byte only for SR_PrintHex
                 
-                MOVE.L  #2,D6
-                JSR     SR_PrintHex
+                MOVE.L  #2,D6               ;Number of characters to display.
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
                 
                 JSR     SR_PrintCRLF
                 RTS
 
-bg16bit         JSR     SR_PrintCRLF
+bg16bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+
+                JSR     SR_PrintCRLF
                 RTS
 
 bg32bit         JSR     SR_PrintCRLF
@@ -308,7 +311,6 @@ OP_CLR          LEA     DISP_CLR,A1
                 TRAP    #15
                 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
-
                 MOVE.B  D7,D4               ;Store size for EA decoding
                 
                 *   Print size
@@ -326,37 +328,32 @@ OP_CLR          LEA     DISP_CLR,A1
                 JSR     SR_PrintCRLF
                 RTS
 
-
 * Compare ---------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CMP          LEA     DISP_CMP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                JSR     SR_Eval7to6
-                MOVE.B  D7,D4
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                MOVE.B  D7,D4               ;Store size for EA decoding
                 
                 MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit
                 
-                JSR     SR_Eval5to3
-                MOVE.B  D7,D2
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to decode src mode
                 
-                JSR     SR_Eval2to0
-                MOVE.B  D7,D3
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
                 
-                JSR     EA_Decode_EA
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
                 
-                JSR     SR_Eval11to9
-                MOVE.B  D7,D3
-                
-                MOVE.B  #0,D2
-                
-                JSR     EA_Decode_EA
-                
-                JSR     SR_PrintCRLF
-                RTS
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                RTS
+                
 * Compare Immediate -----------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
@@ -774,6 +771,9 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
+
+
 
 
 
