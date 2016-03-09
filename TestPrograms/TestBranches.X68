@@ -14,16 +14,19 @@ START   ORG     $7000
         AND.B   D0,D1       ; C200 - AND
         ANDI.B  #1,D0       ; 0200 0001 - ANDI
         ASR.B   #1,D0       ; E200 - SHIFT_ROT
-        BCC.B   test1       ; 6446 - BCC
-one     BGT     test2       ; 6E00 0042 - BCC
-two     BLE     test3       ; 6F00 0040 - BCC
+        BCC.B   test1       ; 6450 - BCC (Bcc displacement may shift if opcodes are added)
+        BCC     test1       ; 6400 004E - BCC
+one     BGT.B   test2       ; 6E4C - BCC
+        BGT     test2       ; 6E00 004A - BCC
+two     BLE.B   test3       ; 6F48 - BCC
+        BLE     test3       ; 6F00 0046 - BCC
 three   CLR.B   D0          ; 4200 - CLR
         CMP.B   D0,D1       ; B200 - CMP
         CMPI.B  #1,D0       ; 0C00 0001 - CMPI
         NOT.W   D1          ; 4641 - NOT (Triggers OP_INVALID)
         DIVU.W  #1,D1       ; 82FC 0001 - DIVU
-        JSR     test4       ; 4EB9 0000705E - JSR
-        LEA     msg,A0      ; 41F9 00007060 - LEA
+        JSR     test4       ; 4EB9 0000706A - JSR (JSR displacement may shift if opcodes are added)
+        LEA     msg,A0      ; 41F9 0000706C - LEA (LEA displacement may shift if opcodes are added)
         LSL.B   #1,D0       ; E308 - SHIFT_ROT
         MOVE.B  D0,D1       ; 1200 - MOVEB
         MOVE.L  D0,D1       ; 2200 - MOVEL
@@ -34,7 +37,7 @@ three   CLR.B   D0          ; 4200 - CLR
         NOP                 ; 4E71 - NOP
         ROL.B   #1,D0       ; E318 - SHIFT_ROT
         SUB.B   #1,D0       ; 5300 - SUBQ (need to add)
-        SUB.B   #$FF,D0     ; 0040 00FF - SUBI (need to add)
+        SUB.B   #$FF,D0     ; 0040 00FF - SUBI
         SUB.B   D0,D1       ; 9200 - SUB
         SUBA.W  #1,A0       ; 5348 - SUBQ
         SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
@@ -56,6 +59,7 @@ test4   RTS
 msg     DC.B    'test5',0
 
         END     START       ; last line of source
+
 
 
 

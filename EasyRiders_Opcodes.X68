@@ -57,8 +57,7 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
 *   Print source and destination EA
-opAddPrintEA    MOVE.L  #5,D7
-                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+opAddPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 
                 RTS
 
@@ -235,10 +234,69 @@ OP_ASR          LEA     DISP_ASR,A1         ;Store the console message for outpu
 
 * Branch Conditionally - Carry Clear ------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BCC          LEA     DISP_BCC,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_BCC          LEA     DISP_BCC,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_BccGroup         ;Grouping for BCC/BGT/BLE
+                
+* Grouping for BCC/BGT/BLE ----------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+OP_BccGroup     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                
+                CMP.B   #$00,D7
+                BEQ     bg16bit             ;Evaluate as 16-bit Displacement
+                
+                CMP.B   #$FF,D7
+                BEQ     bg32bit             ;Evaluate as 32-bit Displacement
+                
+*   Evaluate as 8-bit Displacement
+                LEA     DISP_SIZE_B,A1      ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+                
+                MOVE.W  (A2),D5             ;Reload full opcode for evaluation
+                CLR.L   D7
+                MOVE.B  D5,D7               ;Evaluate last byte only for SR_PrintHex
+                
+                MOVE.L  #2,D6               ;Number of characters to display.
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+bgFinish        JSR     SR_PrintCRLF
                 RTS
+
+bg16bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+                MOVEA.L A2,A3               ;Copy the current instruction pointer location
+                
+                ADDA.W  #2,A3               ;The next word contains the absolute data.
+                
+                MOVE.W  (A3),D7             ;Prepare to print the data.
+                MOVE.L  #4,D6               ;Number of characters to display
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+                ADDA.W  #2,A2               ;Advance the instruction pointer.
+                
+                BRA     bgFinish
+
+bg32bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+                MOVEA.L A2,A3               ;Copy the current instruction pointer location
+                
+                ADDA.W  #2,A3               ;The next word contains the absolute data.
+                
+                MOVE.W  (A3),D7             ;Prepare to print the data.
+                MOVE.L  #8,D6               ;Number of characters to display
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+                ADDA.W  #4,A2               ;Advance the instruction pointer.
+
+                BRA     bgFinish
 
 * Test a Bit and Change -------------------------------------------------------
 * Optional opcode that is not required by this assignment
@@ -251,19 +309,19 @@ OP_BCHG         ADDA.W  #2,A2               ;Need to advance input for testing
 
 * Branch Conditionally - Greater Than -----------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BGT          ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_BGT,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_BGT          LEA     DISP_BGT,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_BccGroup         ;Grouping for BCC/BGT/BLE
 
 * Branch Conditionally - Less or Equal ----------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_BLE          ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_BLE,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
+OP_BLE          LEA     DISP_BLE,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                BRA     OP_BccGroup         ;Grouping for BCC/BGT/BLE
 
 * Clear an Operand ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
@@ -272,7 +330,6 @@ OP_CLR          LEA     DISP_CLR,A1
                 TRAP    #15
                 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
-
                 MOVE.B  D7,D4               ;Store size for EA decoding
                 
                 *   Print size
@@ -290,37 +347,32 @@ OP_CLR          LEA     DISP_CLR,A1
                 JSR     SR_PrintCRLF
                 RTS
 
-
 * Compare ---------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_CMP          LEA     DISP_CMP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                JSR     SR_Eval7to6
-                MOVE.B  D7,D4
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                MOVE.B  D7,D4               ;Store size for EA decoding
                 
                 MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit
                 
-                JSR     SR_Eval5to3
-                MOVE.B  D7,D2
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to decode src mode
                 
-                JSR     SR_Eval2to0
-                MOVE.B  D7,D3
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
                 
-                JSR     EA_Decode_EA
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
                 
-                JSR     SR_Eval11to9
-                MOVE.B  D7,D3
-                
-                MOVE.B  #0,D2
-                
-                JSR     EA_Decode_EA
-                
-                JSR     SR_PrintCRLF
-                RTS
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                RTS
+                
 * Compare Immediate -----------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
@@ -356,10 +408,8 @@ OP_INVALID      LEA     DISP_INVALID,A1
                 MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab
                 
-                MOVE.B  #28,D4              ;char shift
                 MOVE.W  (A2),D7
-                CLR.L   D5                  ;bugfix
-                MOVE.B  #16,D5
+                MOVE.L  #4,D6
                 JSR     SR_PrintHex
                 
                 JSR     SR_PrintCRLF
@@ -380,7 +430,7 @@ OP_JSR          LEA     DISP_JSR,A1
                 JSR     SR_Eval2to0
                 MOVE.B  D7,D3
                 
-                MOVE.B  #2,D4
+                MOVE.B  #28,D4
                 
                 JSR     EA_Decode_EA
                 
@@ -740,6 +790,12 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
+
+
+
+
+
+
 
 
 

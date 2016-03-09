@@ -1,7 +1,7 @@
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
-* Date       : 3/1/16
+* Date       : 3/9/16
 * Description: CSS 422 Final Project - University of Washington | Bothell
 * Instructor : Dr. Yang Peng
 *------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ EA_ModeTable    JMP     EA_Mode_000         ;0 - Register Direct Data
 * Registers in : 
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
-EA_Mode_000     MOVE.B  #26,D5
+EA_Mode_000     MOVE.L  #26,D5
                 LEA     0(A4,D5),A1         ; comments for clever things
                 MOVE.B  #14,D0
                 TRAP    #15
@@ -54,7 +54,7 @@ EA_Mode_000     MOVE.B  #26,D5
 * Registers in : 
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
-EA_Mode_001     MOVE.B  #20, D5
+EA_Mode_001     MOVE.L  #20,D5
                 LEA     0(A4,D5),A1
                 MOVE.B  #14,D0
                 TRAP    #15
@@ -145,9 +145,9 @@ EA_AbsShort_000 LEA     DISP_DOLLAR,A1
                 
                 *read next word from memory, print in hex
                 ADDA.W  #2,A3
-                MOVE.W  (A3),D7
-                MOVE.B  #16,D5
                 
+                MOVE.W  (A3),D7
+                MOVE.L  #4,D6               ;Number of characters to display
                 JSR     SR_PrintHex
                 
                 ADDA.W  #2,A2
@@ -165,9 +165,9 @@ EA_AbsLong_001  LEA     DISP_DOLLAR,A1
                 
                 *read next two words from memory, print in hex
                 ADDA.W  #2,A3
-                MOVE.L  (A3),D7
-                MOVE.B  #0,D5
                 
+                MOVE.L  (A3),D7
+                MOVE.L  #8,D6               ;Number of characters to display
                 JSR     SR_PrintHex
                 
                 ADDA.W  #4,A2
@@ -192,29 +192,30 @@ EA_Immed_100    *immediate data
 
                 *figure out how long the current commad is                
                 
+                CLR.L   D4
                 MOVE.B  OP_SIZE,D4          
-                CMP.B   #1, D4  *For number in D4, 0 = .B, 1 = .W, 2 = .L
+                CMP.B   #1,D4  *For number in D4, 0 = .B, 1 = .W, 2 = .L
                 BGT     Immed_Long
                 
                 ADDA.W  #2, A3
+
+                CLR.L   D7
                 MOVE.W  (A3),D7
-                MOVE.B  #16,D5
-                
+                MOVE.L  #2,D6               ;Number of characters to display
                 JSR     SR_PrintHex
 
                 ADDA.W  #2,A2 *Advance over extension word
                 RTS
 
 Immed_Long      ADDA.W  #2,A3
+                
+                CLR.L   D7
                 MOVE.L  (A3),D7
-                MOVE.B  #0,D5
-
+                MOVE.L  #8,D6               ;Number of characters to display
                 JSR     SR_PrintHex
 
                 ADDA.W  #4,A2 *Advance over extension words
                 RTS                
-                
-                
 
 * Invalid EA ------------------------------------------------------------------
 * Brief description of operation
@@ -225,11 +226,7 @@ EA_INVALID      RTS                         ;This should throw an error with out
 
 
 
-
-
-
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
-

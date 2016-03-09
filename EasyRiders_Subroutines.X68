@@ -173,9 +173,8 @@ SR_Eval11to9    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 * Registers passed: A2
 * Return: Null
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintAddr    CLR     D5
-                MOVE.B  #28,D4              ;char shift
-                MOVE.W  A2,D7
+SR_PrintAddr    MOVE.W  A2,D7
+                MOVE.L  #8,D6
                 JSR     SR_PrintHex
                 
                 MOVE.B  #3,TAB_LENGTH       ;Tab length = 3
@@ -203,33 +202,38 @@ SR_PrintEA      MOVE.W  SRC_MODE,D2
                 RTS
                               
 * Print in Hex ----------------------------------------------------------------
-* Number to be printed - D7
-* Number of digits = (32-D5)/4
+* Convert hex values to ASCII and display them to the console.  The number of
+*   characters displayed is specified by D6, where valid ranges are 0 to 8 in
+*   decimal.
+*   Example:  $00001112 displaying two characters will print '12'.
+* Registers:
+* D6: Digits to print (from right to left)
+* D7: Data to print                
 *---------------Opcode--Operands------------Comments---------------------------
-
-*   Load the address to be printed into D6
-SR_PrintHex     LEA     TABLE_HEXCHAR, A3
-                MOVE.L  D7,D6                
-                MOVE.B  #28,D4
- 
-*   Isolate nibble in D6 to be printed as a hex character
-                LSL.L   D5,D6        
-                LSR.L   D4,D6
-
-*   Multiply nibble by two, find character in char_table
-                MULU    #2,D6
-                LEA     0(A3,D6),A1
-
-*   Print char
-                MOVE.B  #14,D0
-                TRAP    #15
-            
-*   Increment loop counter by four, check if loop is done
-                ADD.B   #4,D5
-                CMP.B   #32,D5
-                BNE     SR_PrintHex
+SR_PrintHex     MOVEM.L D3-D6,-(SP)         ;Store registers to stack
                 
-                CLR.L   D5
+                LEA     TABLE_HEXCHAR,A3
+                MULU.W  #4,D6               ;Convert number of digits to total bits
+                
+                MOVE.L  #32,D3              ;Set the total number of bits
+                SUB.L   D6,D3               ;Set the bit displacement for nibbles left to right
+                MOVE.L  #28,D4              ;Bit displacement to truncate all but one nibble
+                
+phLoop          MOVE.L  D7,D5               ;Load/reload hex output into D5 for work.
+
+                LSL.L   D3,D5               ;For each loop, isolate the next nibble using displacement
+                LSR.L   D4,D5               ;Truncate everything else except the nibble
+                
+                MULU    #2,D5               ;Multiply nibble by two, find character in char_table
+                LEA     0(A3,D5),A1         ;Store the character for output
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                ADD.B   #4,D3               ;Add another 4 bits to displacement to get next nibble
+                CMP.B   #32,D3              ;If displacement = 32, we're done.
+                BNE     phLoop
+
+                MOVEM.L (SP)+,D3-D6         ;Replace registers from stack
                 RTS
 
 * Print .B, .W, or .L ---------------------------------------------------------
@@ -321,6 +325,15 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
+
+
+
+
+
+
+
 
 
 
