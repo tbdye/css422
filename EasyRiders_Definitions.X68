@@ -22,6 +22,9 @@ MSG_LOC_END     DC.B    'Test data ends at location: ',0
 MSG_PAUSE       DC.B    'Press enter to continue output.',CR,LF,0
 MSG_RESTART     DC.B    'End of test data reached.',CR,LF,CR,LF
                 DC.B    'Test another location? (yes/no): ',0
+MSG_ADDR_LOW    DC.B    'The starting address must be $00000400 or higher.',CR,LF,CR,LF,0
+MSG_ADDR_ODD    DC.B    'The address cannot end on an odd byte!',CR,LF,CR,LF,0
+MSG_ADDR_ORDER  DC.B    'The ending address cannot be before the starting address!',CR,LF,CR,LF,0
 MSG_LINEBREAK   DC.B    CR,LF,0
 
 * Printed Opcodes
@@ -106,6 +109,9 @@ CURRENT_OP      DS.W    1                   ;Safe storage for current op word be
 DATA_START_LOC  DS.L    1                   ;Location to begin reading test data
 DATA_END_LOC    DS.L    1                   ;Location to end reading test data
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+
+
+
 
 
 

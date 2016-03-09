@@ -24,6 +24,61 @@ SR_AtoHLoop     MOVE.B  (A1)+,D0            ; Get the first byte
 athEndLoop      MOVE.L  D1,D7               ; Return hex number in D7
                 RTS
 
+* Check Test Data Start Address -----------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_CheckStart   MOVE.L  DATA_START_LOC,D0
+
+                CMP.L   #$400,D0            ;No addresses below $0400 are allowed. 
+                BLT     csFailAddrLow
+                
+                BTST    #0,D0               ;If the LSB is 1, the address is odd and invalid.
+                BNE     csFailAddrOdd
+
+                MOVE.L  #0,D7               ;D7 == 0 indicates the addr is valid.
+csFinish        RTS
+
+csFailAddrLow   LEA     MSG_ADDR_LOW,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7               ;D7 == 1 indicates the addr is invalid.
+                BRA     csFinish
+                
+csFailAddrOdd   LEA     MSG_ADDR_ODD,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7               ;D7 == 1 indicates the addr is invalid.
+                BRA     csFinish
+
+* Check Test Data End Address -------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_CheckEnd     MOVE.L  DATA_START_LOC,D0
+                MOVE.L  DATA_END_LOC,D1
+                
+                BTST    #0,D1               ;If the LSB is 1, the address is odd and invalid.
+                BNE     ceFailAddrOdd
+                
+                CMP.L   D0,D1               ;The ending addr must be greater than starting addr
+                BLT     ceFailAddrOrder
+
+                MOVE.L  #0,D7               ;D7 == 0 indicates the addr is valid.
+ceFinish        RTS
+
+ceFailAddrOrder LEA     MSG_ADDR_ORDER,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7
+                BRA     ceFinish
+                
+ceFailAddrOdd   LEA     MSG_ADDR_ODD,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.L  #1,D7               ;D7 == 1 indicates the addr is invalid.
+                BRA     ceFinish
+
 * Evaluate Bits 2 to 0 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval2to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
@@ -266,6 +321,26 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

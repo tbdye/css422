@@ -37,8 +37,12 @@ FN_InputLoop    LEA     MSG_LOC_START,A1    ;Store the console message for outpu
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
                 
+                JSR     SR_CheckStart       ;Reads DATA_START_LOC, Returns D7
+                CMP.B   #1,D7               ;If D7 == 1, input was invalid, so start over.
+                BEQ     FN_InputLoop
+                
 *   Display end location prompt
-                LEA     MSG_LOC_END,A1      ;Store the console message for output.
+giEndAddrLoop   LEA     MSG_LOC_END,A1      ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
                 
@@ -57,6 +61,10 @@ FN_InputLoop    LEA     MSG_LOC_START,A1    ;Store the console message for outpu
                 LEA     MSG_LINEBREAK,A1    ;Append linefeed to the end of user input
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
+                
+                JSR     SR_CheckEnd         ;Reads DATA_END_LOC, Returns D7
+                CMP.B   #1,D7               ;If D7 == 1, input was invalid, so start over.
+                BEQ     giEndAddrLoop
                 
                 BRA     FN_Cmd_Parser
 
@@ -126,6 +134,7 @@ Fn_Terminate    LEA     MSG_RESTART,A1      ;Store the console message for outpu
                 BEQ     FN_InputLoop        ;Restart the program
 
                 BRA     END_PROGRAM
+
 
 
 
