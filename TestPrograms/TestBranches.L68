@@ -1,6 +1,6 @@
 00007000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.04
-Created On: 3/2/2016 1:37:02 PM
+Created On: 3/8/2016 10:53:14 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Test Branches
@@ -18,48 +18,51 @@ Created On: 3/2/2016 1:37:02 PM
 0000700A  C200                      14          AND.B   D0,D1       ; C200 - AND
 0000700C  0200 0001                 15          ANDI.B  #1,D0       ; 0200 0001 - ANDI
 00007010  E200                      16          ASR.B   #1,D0       ; E200 - SHIFT_ROT
-00007012  6448                      17          BCC.B   test1       ; 6446 - BCC
-00007014  6E00 0048                 18  one     BGT     test2       ; 6E00 0042 - BCC
-00007018  6F00 0046                 19  two     BLE     test3       ; 6F00 0040 - BCC
-0000701C  4200                      20  three   CLR.B   D0          ; 4200 - CLR
-0000701E  B200                      21          CMP.B   D0,D1       ; B200 - CMP
-00007020  0C00 0001                 22          CMPI.B  #1,D0       ; 0C00 0001 - CMPI
-00007024  4641                      23          NOT.W   D1          ; 4641 - NOT (Triggers OP_INVALID)
-00007026  82FC 0001                 24          DIVU.W  #1,D1       ; 82FC 0001 - DIVU
-0000702A  4EB9 00007062             25          JSR     test4       ; 4EB9 0000705E - JSR
-00007030  41F9 00007064             26          LEA     msg,A0      ; 41F9 00007060 - LEA
-00007036  E308                      27          LSL.B   #1,D0       ; E308 - SHIFT_ROT
-00007038  1200                      28          MOVE.B  D0,D1       ; 1200 - MOVEB
-0000703A  2200                      29          MOVE.L  D0,D1       ; 2200 - MOVEL
-0000703C  3200                      30          MOVE.W  D0,D1       ; 3200 - MOVEW
-0000703E  48A7 8000                 31          MOVEM.W D0,-(SP)    ; 48A7 8000 - MOVEM_TO_EA
-00007042  7001                      32          MOVEQ.L #1,D0       ; 7001 - MOVEQ
-00007044  C3C0                      33          MULS.W  D0,D1       ; C3C0 - MULS
-00007046  4E71                      34          NOP                 ; 4E71 - NOP
-00007048  E318                      35          ROL.B   #1,D0       ; E318 - SHIFT_ROT
-0000704A  5300                      36          SUB.B   #1,D0       ; 5300 - SUBQ (need to add)
-0000704C  0400 00FF                 37          SUB.B   #$FF,D0     ; 0040 00FF - SUBI (need to add)
-00007050  9200                      38          SUB.B   D0,D1       ; 9200 - SUB
-00007052  5348                      39          SUBA.W  #1,A0       ; 5348 - SUBQ
-00007054  90FC 00FF                 40          SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
-00007058                            41  
-00007058                            42  * Optional opcodes here
-00007058                            43          ;ASL.B   #1,D0       ; E300 - SHIFT_ROT
-00007058                            44          ;BCHG.L  #1,D0       ; 0840 0001 - BIT_OP
-00007058                            45          ;DIVS.W  #1,D1       ; 83FC 0001 - DIVS
-00007058                            46          ;LSR.B   #1,D0       ; E208 - SHIFT_ROT
-00007058                            47          ;ROR.B   #1,D0       ; E218 - SHIFT_ROT
-00007058                            48          
-00007058  FFFF FFFF                 49          SIMHALT             ; halt simulator
-0000705C                            50  
-0000705C  60B6                      51  test1   BRA     one
-0000705E  60B8                      52  test2   BRA     two
-00007060  60BA                      53  test3   BRA     three
-00007062  4E75                      54  test4   RTS
-00007064                            55  
-00007064= 74 65 73 74 35 00         56  msg     DC.B    'test5',0
-0000706A                            57  
-0000706A                            58          END     START       ; last line of source
+00007012  6450                      17          BCC.B   test1       ; 6450 - BCC (Bcc displacement may shift if opcodes are added)
+00007014  6400 004E                 18          BCC     test1       ; 6400 004E - BCC
+00007018  6E4C                      19  one     BGT.B   test2       ; 6E4C - BCC
+0000701A  6E00 004A                 20          BGT     test2       ; 6E00 004A - BCC
+0000701E  6F48                      21  two     BLE.B   test3       ; 6F48 - BCC
+00007020  6F00 0046                 22          BLE     test3       ; 6F00 0046 - BCC
+00007024  4200                      23  three   CLR.B   D0          ; 4200 - CLR
+00007026  B200                      24          CMP.B   D0,D1       ; B200 - CMP
+00007028  0C00 0001                 25          CMPI.B  #1,D0       ; 0C00 0001 - CMPI
+0000702C  4641                      26          NOT.W   D1          ; 4641 - NOT (Triggers OP_INVALID)
+0000702E  82FC 0001                 27          DIVU.W  #1,D1       ; 82FC 0001 - DIVU
+00007032  4EB9 0000706A             28          JSR     test4       ; 4EB9 0000706A - JSR (JSR displacement may shift if opcodes are added)
+00007038  41F9 0000706C             29          LEA     msg,A0      ; 41F9 0000706C - LEA (LEA displacement may shift if opcodes are added)
+0000703E  E308                      30          LSL.B   #1,D0       ; E308 - SHIFT_ROT
+00007040  1200                      31          MOVE.B  D0,D1       ; 1200 - MOVEB
+00007042  2200                      32          MOVE.L  D0,D1       ; 2200 - MOVEL
+00007044  3200                      33          MOVE.W  D0,D1       ; 3200 - MOVEW
+00007046  48A7 8000                 34          MOVEM.W D0,-(SP)    ; 48A7 8000 - MOVEM_TO_EA
+0000704A  7001                      35          MOVEQ.L #1,D0       ; 7001 - MOVEQ
+0000704C  C3C0                      36          MULS.W  D0,D1       ; C3C0 - MULS
+0000704E  4E71                      37          NOP                 ; 4E71 - NOP
+00007050  E318                      38          ROL.B   #1,D0       ; E318 - SHIFT_ROT
+00007052  5300                      39          SUB.B   #1,D0       ; 5300 - SUBQ (need to add)
+00007054  0400 00FF                 40          SUB.B   #$FF,D0     ; 0040 00FF - SUBI
+00007058  9200                      41          SUB.B   D0,D1       ; 9200 - SUB
+0000705A  5348                      42          SUBA.W  #1,A0       ; 5348 - SUBQ
+0000705C  90FC 00FF                 43          SUBA.W  #$FF,A0     ; 90FC 00FF - SUBA
+00007060                            44  
+00007060                            45  * Optional opcodes here
+00007060                            46          ;ASL.B   #1,D0       ; E300 - SHIFT_ROT
+00007060                            47          ;BCHG.L  #1,D0       ; 0840 0001 - BIT_OP
+00007060                            48          ;DIVS.W  #1,D1       ; 83FC 0001 - DIVS
+00007060                            49          ;LSR.B   #1,D0       ; E208 - SHIFT_ROT
+00007060                            50          ;ROR.B   #1,D0       ; E218 - SHIFT_ROT
+00007060                            51          
+00007060  FFFF FFFF                 52          SIMHALT             ; halt simulator
+00007064                            53  
+00007064  60B2                      54  test1   BRA     one
+00007066  60B6                      55  test2   BRA     two
+00007068  60BA                      56  test3   BRA     three
+0000706A  4E75                      57  test4   RTS
+0000706C                            58  
+0000706C= 74 65 73 74 35 00         59  msg     DC.B    'test5',0
+00007072                            60  
+00007072                            61          END     START       ; last line of source
 
 No errors detected
 No warnings generated
@@ -68,12 +71,12 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-MSG                 7064
-ONE                 7014
+MSG                 706C
+ONE                 7018
 START               7000
-TEST1               705C
-TEST2               705E
-TEST3               7060
-TEST4               7062
-THREE               701C
-TWO                 7018
+TEST1               7064
+TEST2               7066
+TEST3               7068
+TEST4               706A
+THREE               7024
+TWO                 701E
