@@ -398,7 +398,7 @@ OP_DIVU         LEA     DISP_DIVU,A1
                 TRAP    #15
                 
                 *Print op size
-                LEA     DISP_SIZE_W
+                LEA     DISP_SIZE_W,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
@@ -427,6 +427,8 @@ OP_DIVU         LEA     DISP_DIVU,A1
                 MOVE.B  D7,D3
                 
                 MOVE.B  #0,D2
+                
+                JSR     EA_Decode_EA
                 
                 JSR     SR_PrintCRLF
                 
@@ -629,7 +631,7 @@ OP_MULS         LEA     DISP_MULS,A1
                 TRAP    #15
 
                 *Print op size
-                LEA     DISP_SIZE_W
+                LEA     DISP_SIZE_W,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
@@ -658,6 +660,8 @@ OP_MULS         LEA     DISP_MULS,A1
                 MOVE.B  D7,D3
                 
                 MOVE.B  #0,D2
+                
+                JSR     EA_Decode_EA
                 
                 JSR     SR_PrintCRLF
                 
@@ -863,3 +867,20 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
