@@ -619,9 +619,43 @@ OP_MOVEM        ADDA.W  #2,A2               ;Need to advance input for testing
 
 * Move Quick ------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEQ        LEA     DISP_MOVEQ,A1
-                MOVE.B  #13,D0
+OP_MOVEQ        LEA     DISP_MOVEQ,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab
+                
+*   Print 8-bit immediate data
+                LEA     DISP_OCTOTHORPE,A1
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                LEA     DISP_DOLLAR,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+
+                MOVE.W  (A2),D5             ;Reload full opcode for evaluation
+                CLR.L   D7
+                MOVE.B  D5,D7               ;Evaluate last byte only for SR_PrintHex
+                
+                MOVE.L  #2,D6               ;Number of characters to display.
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+*   Print comma             
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+*   Print destination
+                MOVE.W  #0,D2               ;Force Dn dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns console output.
+                
+                JSR     SR_PrintCRLF
                 RTS
 
 * Signed Multiply -------------------------------------------------------------
@@ -884,3 +918,11 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
 
 
 
+
+
+
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
