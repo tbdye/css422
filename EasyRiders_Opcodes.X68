@@ -626,6 +626,8 @@ OP_MULS         LEA     DISP_MULS,A1
                 
                 MOVE.B  #0,D2
                 
+                JSR     SR_PrintCRLF
+                
                 RTS
                 
 
