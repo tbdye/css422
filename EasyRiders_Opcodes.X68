@@ -393,10 +393,43 @@ OP_DIVS         ADDA.W  #2,A2               ;Need to advance input for testing
 
 * Unsigned Divide ---------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_DIVU         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_DIVU,A1
-                MOVE.B  #13,D0
+OP_DIVU         LEA     DISP_DIVU,A1
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                *Print op size
+                LEA     DISP_SIZE_W
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #5,TAB_LENGTH
+                JSR     SR_PrintTab
+                
+                
+                *Find and print source EA
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                JSR     EA_Decode_EA
+                
+
+                *Print comma             
+                LEA     DISP_COMMA,A1  
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                
+                *Find and print destination register
+                JSR     SR_Eval11to9
+                MOVE.B  D7,D3
+                
+                MOVE.B  #0,D2
+                
+                JSR     SR_PrintCRLF
+                
                 RTS
 
 * Disassembler does not support provided opcode -------------------------------
@@ -592,10 +625,44 @@ OP_MOVEQ        LEA     DISP_MOVEQ,A1
 * Signed Multiply -------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_MULS         LEA     DISP_MULS,A1
-                MOVE.B  #13,D0
+                MOVE.B  #14,D0
                 TRAP    #15
-                RTS
 
+                *Print op size
+                LEA     DISP_SIZE_W
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #5,TAB_LENGTH
+                JSR     SR_PrintTab
+                
+                
+                *Find and print source EA
+                JSR     SR_Eval5to3
+                MOVE.B  D7,D2
+                
+                JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                
+                JSR     EA_Decode_EA
+                
+
+                *Print comma             
+                LEA     DISP_COMMA,A1  
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                
+                *Find and print destination register
+                JSR     SR_Eval11to9
+                MOVE.B  D7,D3
+                
+                MOVE.B  #0,D2
+                
+                JSR     SR_PrintCRLF
+                
+                RTS
+                
 * No Operation ----------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_NOP          LEA     DISP_NOP,A1
@@ -790,24 +857,6 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
                 MOVE.B  #13,D0
                 TRAP    #15
                 RTS
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 *~Font name~Courier New~
