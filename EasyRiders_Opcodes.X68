@@ -1,4 +1,3 @@
-
 *------------------------------------------------------------------------------
 * Title      : 68K Disassember Final Project
 * Written by : Thomas Dye and Ross Holzworth
@@ -58,7 +57,6 @@ opAddEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
 
 *   Print source and destination EA
 opAddPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-                
                 RTS
 
 * Add Address -----------------------------------------------------------------
@@ -90,7 +88,6 @@ OP_ADDA         LEA     DISP_ADDA,A1        ;Store the console message for outpu
                 
 *   Print source and destination EA
                 JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-                
                 RTS
 
 * Add Immediate ---------------------------------------------------------------
@@ -120,15 +117,57 @@ OP_ADDI         LEA     DISP_ADDI,A1        ;Store the console message for outpu
                 
 *   Print source and destination EA
                 JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-                
                 RTS
 
 * Add Quick -------------------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_ADDQ         LEA     DISP_ADDQ,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_ADDQ         LEA     DISP_ADDQ,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+*   Print size                
+                JSR     SR_Eval7to6            ;Reads A2, Returns D7
+                
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+
+opAqCount       LEA     DISP_OCTOTHORPE,A1  ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                
+                CLR.L   D1                  ;Ensure output register is clear
+                
+                MOVE.W  D7,D1               ;Copy bits to D1 for console output.
+                
+                CMP.B   #0,D1
+                BEQ     opAqIfZero          ;#0 - value of zero represents a count of eight
+
+opAqDispCnt     MOVE.B  #3,D0               ;Will display signed number from D1
+                TRAP    #15                 ;Display to console.
+                
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,D2               ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+                BRA     opAqDone
+
+*   Count is 8 if value is 0
+opAqIfZero      MOVE.W  #8,D1               ;#0 - value of zero represents a count of eight
+                BRA     OpAqDispCnt
+
+*   Print memory address
+opAqDone        JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
 
 * AND Logical -----------------------------------------------------------------
@@ -181,7 +220,6 @@ opAndEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
 
 *   Print source and destination EA
 opAndPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-                
                 RTS
 
 * AND Immediate ---------------------------------------------------------------
@@ -212,7 +250,6 @@ OP_ANDI         LEA     DISP_ANDI,A1        ;Store the console message for outpu
                 
 *   Print source and destination EA
                 JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-                
                 RTS
 
 * Arithmetic Shift Left -------------------------------------------------------
@@ -298,15 +335,6 @@ bg32bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name an
 
                 BRA     bgFinish
 
-* Test a Bit and Change -------------------------------------------------------
-* Optional opcode that is not required by this assignment
-*---------------Opcode--Operands------------Comments---------------------------
-OP_BCHG         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_BCHG,A1
-                MOVE.B  #13,D0
-                TRAP    #15
-                RTS
-
 * Branch Conditionally - Greater Than -----------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_BGT          LEA     DISP_BGT,A1         ;Store the console message for output.
@@ -325,14 +353,14 @@ OP_BLE          LEA     DISP_BLE,A1         ;Store the console message for outpu
 
 * Clear an Operand ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CLR          LEA     DISP_CLR,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+OP_CLR          LEA     DISP_CLR,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 MOVE.B  D7,D4               ;Store size for EA decoding
                 
-                *   Print size
+*   Print size
                 MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
                 
@@ -349,9 +377,9 @@ OP_CLR          LEA     DISP_CLR,A1
 
 * Compare ---------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CMP          LEA     DISP_CMP,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+OP_CMP          LEA     DISP_CMP,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 MOVE.B  D7,D4               ;Store size for EA decoding
@@ -376,62 +404,74 @@ OP_CMP          LEA     DISP_CMP,A1
 * Compare Immediate -----------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_CMPI         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_CMPI,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_CMPI         LEA     DISP_CMPI,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size  
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA              
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                MOVE.W  #7,SRC_MODE         ;Force Absolute Short/Long/Immediate Data
+                MOVE.W  #4,SRC_REGISTER     ;Force Immediate Data selection
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_MODE        ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
 
 * Signed Divide ---------------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_DIVS         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_DIVS,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_DIVS         LEA     DISP_DIVS,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+                MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to src dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to src dest register
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
 
 * Unsigned Divide ---------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_DIVU         LEA     DISP_DIVU,A1
-                MOVE.B  #14,D0
-                TRAP    #15
-                
-                *Print op size
-                LEA     DISP_SIZE_W,A1
-                MOVE.B  #14,D0
-                TRAP    #15
-                
-                MOVE.B  #4,TAB_LENGTH
-                JSR     SR_PrintTab
-                
-                
-                *Find and print source EA
-                JSR     SR_Eval5to3
-                MOVE.B  D7,D2
-                
-                JSR     SR_Eval2to0
-                MOVE.B  D7,D3
-                
-                JSR     EA_Decode_EA
-                
+OP_DIVU         LEA     DISP_DIVU,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
 
-                *Print comma             
-                LEA     DISP_COMMA,A1  
-                MOVE.B  #14,D0
-                TRAP    #15
+                MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to src dest mode
                 
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to src dest register
                 
-                *Find and print destination register
-                JSR     SR_Eval11to9
-                MOVE.B  D7,D3
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
                 
-                MOVE.B  #0,D2
-                
-                JSR     EA_Decode_EA
-                
-                JSR     SR_PrintCRLF
-                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
 
 * Disassembler does not support provided opcode -------------------------------
@@ -479,28 +519,25 @@ OP_JSR          LEA     DISP_JSR,A1
 
 * Load Effective Address ------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_LEA          LEA     DISP_LEA,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+OP_LEA          LEA     DISP_LEA,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
                 MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
-                JSR     SR_PrintTab
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to src dest mode
                 
-                JSR     SR_Eval5to3
-                MOVE.B  D7,D2
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to src dest register
                 
-                JSR     SR_Eval2to0
-                MOVE.B  D7,D3
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  #1,DEST_MODE        ;Force An dest mode
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
                 
-                MOVE.B  #2,D4
-                
-                JSR     SR_Eval11to9
-                MOVE.B  D7,D3
-                MOVE.B  #1,D2               *LEA always loads into an address register directly
-                
-                JSR     EA_Decode_EA
-                
-                JSR     SR_PrintCRLF
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
 
 * Logical Shift Left ----------------------------------------------------------
@@ -531,6 +568,9 @@ OP_MOVE_B       LEA     DISP_MOVE,A1           ;
                 TRAP    #15
                 
                 MOVE.B  #0,OP_SIZE               *Store size for EA decode
+                
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab
                                      
                 BRA     MOVE_Basic
                 
@@ -541,35 +581,67 @@ OP_MOVE_L       LEA     DISP_MOVE,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                LEA     DISP_SIZE_L,A1
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+                
+                JSR     SR_Eval8to6         ;Reads A2, Returns D7
+                
+                CMP     #%001,D7
+                BEQ     mlMOVEA             ;%001
+                
+mlReturn        LEA     DISP_SIZE_L,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                MOVE.B  #2,OP_SIZE              *Store size for EA decode       
+                MOVE.B  #2,OP_SIZE              *Store size for EA decode  
+
+                JSR     SR_PrintTab     
                 
                 BRA     MOVE_Basic
+                
+*   Add 'A' for MOVEA opcode
+mlMOVEA         LEA     DISP_MOVE_A,A1      ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                MOVE.B  #3,TAB_LENGTH       ;Print spaces between opcode name and EA
+                
+                BRA     mlReturn
 
 * Move Data from Source to Destination - Word ---------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_MOVE_W       LEA     DISP_MOVE,A1
                 MOVE.B  #14,D0
                 TRAP    #15
+
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+
+                JSR     SR_Eval8to6         ;Reads A2, Returns D7
                 
+                CMP     #%001,D7
+mwReturn        BEQ     mwMOVEA             ;%001
+
                 LEA     DISP_SIZE_W,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
                 MOVE.B  #1,OP_SIZE               *Store size for EA decode
                 
+                JSR     SR_PrintTab
+                
                 BRA     MOVE_Basic
+
+*   Add 'A' for MOVEA opcode
+mwMOVEA         LEA     DISP_MOVE_A,A1      ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
+                MOVE.B  #3,TAB_LENGTH       ;Print spaces between opcode name and EA
                 
+                BRA     mwReturn
+
 *MOVE_Basic - all of the code that MOVE.B, MOVE.W, and MOVE.L share in common 
 *---------------Opcode--Operands------------Comments---------------------------
-MOVE_Basic      MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
-                JSR     SR_PrintTab
-
-                MOVE.W  (A2),CURRENT_OP
+MOVE_Basic      MOVE.W  (A2),CURRENT_OP
                 MOVE.B  #13,D4
             
                 MOVE.W  CURRENT_OP,D2
@@ -612,7 +684,6 @@ MOVE_Basic      MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name an
                 CLR.L   D7
                 
                 RTS
-
 
 * Move Multiple Registers -----------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
@@ -665,52 +736,57 @@ OP_MOVEQ        LEA     DISP_MOVEQ,A1       ;Store the console message for outpu
 
 * Signed Multiply -------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MULS         LEA     DISP_MULS,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+OP_MULS         LEA     DISP_MULS,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
 
-                *Print op size
-                LEA     DISP_SIZE_W,A1
-                MOVE.B  #14,D0
-                TRAP    #15
-                
-                MOVE.B  #4,TAB_LENGTH
-                JSR     SR_PrintTab
-                
-                
-                *Find and print source EA
-                JSR     SR_Eval5to3
-                MOVE.B  D7,D2
-                
-                JSR     SR_Eval2to0
-                MOVE.B  D7,D3
-                
-                JSR     EA_Decode_EA
-                
+                MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
 
-                *Print comma             
-                LEA     DISP_COMMA,A1  
-                MOVE.B  #14,D0
-                TRAP    #15
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to src dest mode
                 
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to src dest register
                 
-                *Find and print destination register
-                JSR     SR_Eval11to9
-                MOVE.B  D7,D3
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
                 
-                MOVE.B  #0,D2
-                
-                JSR     EA_Decode_EA
-                
-                JSR     SR_PrintCRLF
-                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
+
+* Unsigned Multiply -------------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+OP_MULU         LEA     DISP_MULU,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+                MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to src dest mode
                 
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to src dest register
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  #0,DEST_MODE        ;Force Dn dest mode
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
+                RTS
+
 * No Operation ----------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_NOP          LEA     DISP_NOP,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_NOP          LEA     DISP_NOP,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
 
 * Rotate (Without Extend) Left ------------------------------------------------
@@ -732,21 +808,23 @@ OP_ROR          LEA     DISP_ROR,A1         ;Store the console message for outpu
 
 * Return from Subroutine ------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_RTS          LEA     DISP_RTS,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_RTS          LEA     DISP_RTS,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
 
 * Grouping for ASL/ASR/LSL/LSR/ROL/ROR ----------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_ShiftRot     JSR     SR_Eval7to6         ;Reads A2, Returns D7
+
+                CMP.B   #%11,D7
+                BEQ     opShRoMemory        ;%11
                 
 *   Print size                
                 MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrntSize2bit     ;Reads D7, Returns void
-                
-                CMP.B   #%11,D7
-                BEQ     opShRoMemory        ;%11
                 
                 MOVE.W  (A2),D7  * not sure why I can't just bittest out of (A2) directly
                 BTST    #5,D7             
@@ -755,8 +833,15 @@ OP_ShiftRot     JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 BRA     opShRoRegister      ;Bit 5 = 1
 
 *   Memory Shifts
-opShRoMemory    MOVE.W  #7,D2               ;Force Absolute Short/Long/Immediate Data mode
-                MOVE.W  #4,D3               ;Force Immediate Data selection
+opShRoMemory    MOVE.L  #1,D7               ;Force size = .W
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,D2               ;Copy bits to decode EA mode
+                
+                JSR     SR_Eval2to0         ;Read A2, Return D7
+                MOVE.W  D7,D3               ;Copy bits to decode EA register
                 
                 JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
 
@@ -809,29 +894,21 @@ opShRoRegister  MOVE.W  #0,SRC_MODE         ;Force Dn src mode
 
 *   Print source and destination EA
                 JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-
                 RTS
 
 *   Print memory address
-opShRoDone      JSR     SR_PrintCRLF
+opShRoDone      JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
 
 * PseudoOp Simhalt ------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_SIMHALT      BRA     OP_INVALID
-                
-                ;LEA     DISP_SIMHALT,A1
-                ;MOVE.B  #13,D0
-                ;TRAP    #15
-                ;MOVE.B  #1,BOOL_FINISHED    ;Mark that input machine code ended
-                
-                ;RTS
 
 * Subtract --------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUB          LEA     DISP_SUB,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+OP_SUB          LEA     DISP_SUB,A1         ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
                 JSR     SR_Eval7to6         ;Reads A2, Returns D7
                 
@@ -871,53 +948,113 @@ opSubEAMode     MOVE.W  #0,SRC_MODE         ;Force Dn src mode
                 MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
 
 *   Print source and destination EA
-opSubPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
-                
+opSubPrintEA    JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void               
                 RTS
 
 * Subtract Address ------------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUBA         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_SUBA,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_SUBA         LEA     DISP_SUBA,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval8to6         ;Reads A2, Returns D7
+
+*   Print size                
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrntSize3bit     ;Reads D7, Returns void
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_MODE         ;Copy bits to decode src mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,SRC_REGISTER     ;Copy bits to decode src register
+                
+                MOVE.W  #1,DEST_MODE        ;Force An dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
                 
 * Subtract Immediate ----------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUBI         ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_SUBI,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_SUBI         LEA     DISP_SUBI,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+*   Print size  
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA              
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+                
+                MOVE.W  #7,SRC_MODE         ;Force Absolute Short/Long/Immediate Data
+                MOVE.W  #4,SRC_REGISTER     ;Force Immediate Data selection
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_MODE        ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,DEST_REGISTER    ;Copy bits to decode dest register
+                
+*   Print source and destination EA
+                JSR     SR_PrintEA          ;Reads SRC/DEST MODE/REGISTER storage, Returns void
                 RTS
                 
 * Subtract Quick --------------------------------------------------------------
 * Optional opcode that is not required by this assignment
 *---------------Opcode--Operands------------Comments---------------------------
-OP_SUBQ         LEA     DISP_SUBQ,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_SUBQ         LEA     DISP_SUBQ,A1        ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+*   Print size                
+                JSR     SR_Eval7to6         ;Reads A2, Returns D7
+                
+                MOVE.B  #4,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrntSize2bit     ;Reads D7, Returns void
+
+opSqCount       LEA     DISP_OCTOTHORPE,A1  ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                
+                CLR.L   D1                  ;Ensure output register is clear
+                
+                MOVE.W  D7,D1               ;Copy bits to D1 for console output.
+                
+                CMP.B   #0,D1
+                BEQ     opSqIfZero          ;#0 - value of zero represents a count of eight
+
+opSqDispCnt     MOVE.B  #3,D0               ;Will display signed number from D1
+                TRAP    #15                 ;Display to console.
+                
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                JSR     SR_Eval5to3         ;Reads A2, Returns D7
+                MOVE.W  D7,D2               ;Copy bits to decode dest mode
+                
+                JSR     SR_Eval2to0         ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns void
+
+                BRA     opSqDone
+
+*   Count is 8 if value is 0
+opSqIfZero      MOVE.W  #8,D1               ;#0 - value of zero represents a count of eight
+                BRA     OpSqDispCnt
+
+*   Print memory address
+opSqDone        JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

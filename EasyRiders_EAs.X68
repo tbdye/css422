@@ -112,12 +112,12 @@ EA_Mode_100     LEA     DISP_MINUS,A1
 * 5 - Not Supported ----------------------------------------------------------- 
 * Should throw error
 *---------------Opcode--Operands------------Comments---------------------------
-EA_Mode_101     RTS
+EA_Mode_101     BRA     EA_INVALID
 
 * 6 - Not Supported -----------------------------------------------------------
 * Should throw error
 *---------------Opcode--Operands------------Comments---------------------------
-EA_Mode_110     RTS
+EA_Mode_110     BRA     EA_INVALID
 
 * 7 - Absolute Short/Long/Immediate Data --------------------------------------
 * Brief description of operation
@@ -201,7 +201,7 @@ EA_Immed_100    *immediate data
 
                 CLR.L   D7
                 MOVE.W  (A3),D7
-                MOVE.L  #2,D6               ;Number of characters to display
+                MOVE.L  #4,D6               ;Number of characters to display
                 JSR     SR_PrintHex
 
                 ADDA.W  #2,A2 *Advance over extension word
@@ -222,7 +222,14 @@ Immed_Long      ADDA.W  #2,A3
 * Registers in : 
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
-EA_INVALID      RTS                         ;This should throw an error with output
+EA_INVALID      LEA     DISP_INVALID,A1  ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                ADDA.W  #2,A2               ;Advance opcode pointer
+                RTS                         ;This should throw an error with output
+
+
 
 
 

@@ -26,16 +26,17 @@ START:
         ROL.B   #8,D0           ;test12 - E118
 
 * Test Register Shift Mode
-        ASR.W   (A0)            ;test13 - E0D0 - fails
-        LSL.W   (A0)+           ;test14 - E3D8 - fails
-        ROL.W   -(A0)           ;test15 - E7E0 - fails
-        ASR.W   $42A6           ;test16 - E0F8 42A6 - fails
-        LSL.W   $9100           ;test17 - E3F9 00009100 - fails
-        ROL.W   $0000A000       ;test18 - E7F9 0000A000 - fails
+        ASR.W   (A0)            ;test13 - E0D0
+        LSL.W   (A0)+           ;test14 - E3D8
+        ROL.W   -(A0)           ;test15 - E7E0
+        ASR.W   $42A6           ;test16 - E0F8 42A6
+        LSL.W   $9100           ;test17 - E3F9 00009100
+        ROL.W   $0000A000       ;test18 - E7F9 0000A000
         
         SIMHALT                ;halt simulator
 
         END     START          ;last line of source
+
 
 
 
