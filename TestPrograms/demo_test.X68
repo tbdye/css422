@@ -22,13 +22,13 @@ start		EQU	$00007000	* ORG and END address
 
 * This is a group of ADD instructions
 
-add_start	ADDI.W	#$4E71,D1               ;test failed
-		ADDQ.L	#07,D7	                ;test failed	
+add_start	ADDI.W	#$4E71,D1
+		ADDQ.L	#07,D7		
 		ADDA.L	-(SP),A2
 		ADDA.W	(A6)+,A3
-		ADDA.L	#$3000AAAA,A6           ;test failed
-		ADDI.L	#$D50000AA,D5           ;test failed
-		ADDI.W	#$5555,D6               ;test failed
+		ADDA.L	#$3000AAAA,A6
+		ADDI.L	#$D50000AA,D5
+		ADDI.W	#$5555,D6
 		ADDI.B	#$FE,D0
 		
 * Group is random data
@@ -47,12 +47,12 @@ moves		MOVE.B	D0,D1
 		MOVE.W	A6,$F30045BB
 		MOVE.L	D0,D0
 		MOVE.L	D7,(A6)+
-		MOVE.W	#$FFD0,(A3)             ;test failed
+		MOVE.W	#$FFD0,(A3)
 		MOVE.L	$C00022AA,$3000A0F8
 		MOVE.L	A0,-(A5)
-		MOVEA.W	(A6),A0                 ;test failed
-		MOVEM.W	A0/A1/A2/D5/D6/D7,$3A(A6,D4.L)  ;test failed
-		MOVEM.L	(A0)+,D0/D1/D2/A4/A3/A0/A1      ;test failed
+		MOVEA.W	(A6),A0
+		MOVEM.W	A0/A1/A2/D5/D6/D7,$3A(A6,D4.L)
+		MOVEM.L	(A0)+,D0/D1/D2/A4/A3/A0/A1
 *		MOVEA.L	#$AAAA00AA,A2
 		
 * Divide and multiple optional instructions
@@ -61,16 +61,16 @@ ands		AND.B	#$01,$4568
 		AND.L	$8000A000,D3
 shifts		LSL.B	D0,D0
 		LSL.W	#4,D0
-		LSL.W	(A2)+                   ;test failed
-		ASR.B	D6,D7                   ;test failed
+		LSL.W	(A2)+
+		ASR.B	D6,D7
 rolls		ROL.L	D2,D3
 		ROR.L	#4,D6
 
 clear		CLR.B	D4
-load_addr	LEA	$DC00FF00,A2            ;test failed
-		LEA	(A5),A4                 ;test failed
-		LEA	(ands,PC),A3            ;test failed
-		LEA	-$20(A2,D7),A2          ;test failed
+load_addr	LEA	$DC00FF00,A2
+		LEA	(A5),A4
+		LEA	(ands,PC),A3
+		LEA	-$20(A2,D7),A2
 
 * random data	
 		DC.W	2949,0411,2848,7869
@@ -98,17 +98,15 @@ jmplabel	BSR	compares	* BSR long test
 *These are not required instructions
 multiply	MULS	D0,D3		*Optional instruction
 		MULS	(A6),D0		*Optional instruction
-		MULS	#$4567,D1	          ;test failed
+		MULS	#$4567,D1	*Optional instruction
 		DIVU	(A3)+,D5	*Optional instruction
 		NOP
 		NOP
-		SUB.L	#$00000055,D4           ;test failed
-		SUB.L	#$FFFFFFEE,D7           ;test failed
+		SUB.L	#$00000055,D4
+		SUB.L	#$FFFFFFEE,D7
 	
 
 		END	start
-
-
 
 
 
