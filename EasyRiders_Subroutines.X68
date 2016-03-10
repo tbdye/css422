@@ -264,14 +264,17 @@ SR_PrntSize3bit MOVEM.L A0-A6/D0-D6,-(SP)   ;Store registers to stack
 
 *   Print .B        
 psSizeB         LEA     DISP_SIZE_B,A1      ;Store the console message for output.
+                MOVE.B  #0,OP_SIZE          ;Store the size of the EA.
                 BRA     psDone
 
 *   Print .W
 psSizeW         LEA     DISP_SIZE_W,A1      ;Store the console message for output.
+                MOVE.B  #1,OP_SIZE          ;Store the size of the EA.
                 BRA     psDone           
 
 *   Print .L
 psSizeL         LEA     DISP_SIZE_L,A1      ;Store the console message for output.
+                MOVE.B  #2,OP_SIZE          ;Store the size of the EA.
                 BRA     psDone
 
 *   Print size symbol
@@ -325,6 +328,7 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
 
 
 

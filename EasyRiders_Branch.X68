@@ -58,19 +58,18 @@ BRANCH_4        JSR     SR_Eval11to8        ;Reads A2, Returns D7
                 BEQ     OP_CLR              ;$2
                 CMP.B   #$E,D7
                 BEQ     BRANCH_4E           ;$E
-                
+
                 JSR     SR_Eval11to6        ;Reads A2, Returns D7
-                ANDI.B  #%00100010,D7       ;Mask out bits where index = 0 for eval
+                ANDI.B  #%00101110,D7       ;Mask out bits where index = 0 for eval
                 
                 CMP.B   #%00100010,D7
                 BEQ     OP_MOVEM            ;%1x001x
 
-                JSR     SR_Eval11to6        ;Reads A2, Returns D7
-                ANDI.B  #%00000111,D7       ;Mask out bits where index = 0 for eval
+                JSR     SR_Eval8to6         ;Reads A2, Returns D7
                 
-                CMP.B   #%00000111,D7
-                BEQ     OP_LEA              ;%xxx111
-                
+                CMP.B   #%111,D7
+                BEQ     OP_LEA              ;%111
+
                 BRA     OP_INVALID          ;No matches found
 
 * From Root to Branch 5 -------------------------------------------------------
@@ -159,7 +158,7 @@ BRANCH_B        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 BRANCH_C        JSR     SR_Eval8to6         ;Reads A2, Returns D7
 
                 CMP.B   #%011,D7
-                BEQ     OP_INVALID          ;%011 - Op not supported
+                BEQ     OP_MULU             ;%011
                 CMP.B   #%111,D7
                 BEQ     OP_MULS             ;%111
                 
@@ -200,7 +199,30 @@ BRANCH_D        JSR     SR_Eval8to4         ;Reads A2, Returns D7
 * A2: Current test opcode in use and sequence locator (do not modify)
 * D7: Current test opcode workspace (set by SR_Eval8to3)
 *---------------Opcode--Operands------------Comments---------------------------
-BRANCH_E        JSR     SR_Eval8to3         ;Reads A2, Returns D7
+BRANCH_E        JSR     SR_Eval11to6        ;Reads A2, Returns D7
+                ANDI.B  #%00111111,D7       ;Mask out bits where index = 0 for eval
+*   Catch memory shifts                
+                CMP.B   #%00000011,D7
+                BEQ     OP_ASR              ;%000011
+                CMP.B   #%00001011,D7
+                BEQ     OP_LSR              ;%001011
+                CMP.B   #%00011011,D7
+                BEQ     OP_ROR              ;%011011
+
+                CMP.B   #%00000111,D7
+                BEQ     OP_ASL              ;%000111
+                CMP.B   #%00001111,D7
+                BEQ     OP_LSL              ;%001111
+                CMP.B   #%00011111,D7
+                BEQ     OP_ROL              ;%011111
+
+                ANDI.B  #%00111011,D7       ;Mask out bits where index = 0 for eval
+                
+                CMP.B   #%00010011,D7
+                BEQ     OP_INVALID          ;%010x11
+                
+*   Catch count and register shifts
+                JSR     SR_Eval8to3         ;Reads A2, Returns D7
                 ANDI.B  #%00100011,D7       ;Mask out bits where index = 0 for eval
                 
                 CMP.B   #%00000000,D7
@@ -258,6 +280,9 @@ BRANCH_4E7      JSR     SR_Eval3to0         ;Reads A2, Returns D7
                 BEQ     OP_RTS              ;$5
                 
                 BRA     OP_INVALID          ;No matches found
+
+
+
 
 
 

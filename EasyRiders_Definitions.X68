@@ -55,6 +55,7 @@ DISP_MOVE       DC.B    'MOVE',0
 DISP_MOVEM      DC.B    'MOVEM',0
 DISP_MOVEQ      DC.B    'MOVEQ',0
 DISP_MULS       DC.B    'MULS',0
+DISP_MULU       DC.B    'MULU',0
 DISP_NOP        DC.B    'NOP',0
 DISP_ROL        DC.B    'ROL',0
 DISP_ROR        DC.B    'ROR',0
@@ -78,6 +79,7 @@ DISP_COMMA      DC.B    ',',0
 DISP_SIZE_B     DC.B    '.B',0
 DISP_SIZE_L     DC.B    '.L',0
 DISP_SIZE_W     DC.B    '.W',0
+DISP_MOVE_A     DC.B    'A',0
 
 TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    '1',0
@@ -109,6 +111,8 @@ CURRENT_OP      DS.W    1                   ;Safe storage for current op word be
 DATA_START_LOC  DS.L    1                   ;Location to begin reading test data
 DATA_END_LOC    DS.L    1                   ;Location to end reading test data
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+
+
 
 
 
