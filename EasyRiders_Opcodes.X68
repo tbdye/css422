@@ -402,7 +402,7 @@ OP_DIVU         LEA     DISP_DIVU,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                MOVE.B  #5,TAB_LENGTH
+                MOVE.B  #4,TAB_LENGTH
                 JSR     SR_PrintTab
                 
                 
@@ -435,19 +435,24 @@ OP_DIVU         LEA     DISP_DIVU,A1
                 RTS
 
 * Disassembler does not support provided opcode -------------------------------
+* Display ADDR  DATA  $WXYZ  where WXYZ is the unsupported opcode.
 *---------------Opcode--Operands------------Comments---------------------------
-OP_INVALID      LEA     DISP_INVALID,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+OP_INVALID      LEA     DISP_INVALID,A1     ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
                 MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
-                JSR     SR_PrintTab
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
                 
-                MOVE.W  (A2),D7
-                MOVE.L  #4,D6
-                JSR     SR_PrintHex
+                LEA     DISP_DOLLAR,A1      ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
                 
-                JSR     SR_PrintCRLF
+                MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                MOVE.L  #4,D6               ;Number of characters to display
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+                JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
 
 * Jump to Subroutine ----------------------------------------------------------
@@ -619,9 +624,43 @@ OP_MOVEM        ADDA.W  #2,A2               ;Need to advance input for testing
 
 * Move Quick ------------------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEQ        LEA     DISP_MOVEQ,A1
-                MOVE.B  #13,D0
-                TRAP    #15
+OP_MOVEQ        LEA     DISP_MOVEQ,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+                MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
+                JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
+                
+*   Print 8-bit immediate data
+                LEA     DISP_OCTOTHORPE,A1  ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+                
+                LEA     DISP_DOLLAR,A1      ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+                MOVE.W  (A2),D5             ;Reload full opcode for evaluation
+                CLR.L   D7
+                MOVE.B  D5,D7               ;Evaluate last byte only for SR_PrintHex
+                
+                MOVE.L  #2,D6               ;Number of characters to display.
+                JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
+                
+*   Print comma             
+                LEA     DISP_COMMA,A1       ;Store the console message for output.
+                MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
+                TRAP    #15                 ;Display to console.
+
+*   Print destination
+                MOVE.W  #0,D2               ;Force Dn dest mode
+                
+                JSR     SR_Eval11to9        ;Reads A2, Returns D7
+                MOVE.W  D7,D3               ;Copy bits to decode dest register
+                
+                JSR     EA_Decode_EA        ;Reads D2 and D3, Returns console output.
+                
+                JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
 
 * Signed Multiply -------------------------------------------------------------
@@ -635,7 +674,7 @@ OP_MULS         LEA     DISP_MULS,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                MOVE.B  #5,TAB_LENGTH
+                MOVE.B  #4,TAB_LENGTH
                 JSR     SR_PrintTab
                 
                 
@@ -884,3 +923,12 @@ OP_SUBQ         LEA     DISP_SUBQ,A1
 
 
 
+
+
+
+
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
