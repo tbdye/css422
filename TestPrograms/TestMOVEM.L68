@@ -1,0 +1,49 @@
+00007000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 3/11/2016 9:04:33 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Test MOVEM
+00000000                             3  * Written by : Thomas Dye
+00000000                             4  * Date       : 3/11/2016
+00000000                             5  * Description: Test basic functionality of MOVEM opcode.
+00000000                             6  *-----------------------------------------------------------
+00007000                             7          ORG     $7000
+00007000                             8  START:
+00007000                             9  *   various EA modes
+00007000  48A7 FF00                 10          MOVEM       D0-D7,-(A7)                     ;test1
+00007004  4C9F 00FF                 11          MOVEM       (A7)+,D0-D7                     ;test2
+00007008                            12  
+00007008  48A7 00FE                 13          MOVEM       A0-A6,-(A7)                     ;test3
+0000700C  4C9F 7F00                 14          MOVEM       (A7)+,A0-A6                     ;test4
+00007010                            15    
+00007010  48A7 FFFE                 16          MOVEM       A0-A6/D0-D7,-(A7)               ;test5
+00007014  4C9F 7FFF                 17          MOVEM       (A7)+,A0-A6/D0-D7               ;test6
+00007018                            18   
+00007018  48B8 7FFF 2468            19          MOVEM       D0-D7/A0-A6,$2468               ;test7
+0000701E  48B8 7FFF 2468            20          MOVEM       D0-D7/A0-A6,$2468               ;test8
+00007024                            21  
+00007024                            22  *   test different sizes        
+00007024  4C99 00FF                 23          MOVEM.W     (A1)+,D0-D7                     ;test9
+00007028  4CD9 00FF                 24          MOVEM.L     (A1)+,D0-D7                     ;test10
+0000702C  48F8 7FFF 1234            25          MOVEM.L     D0-D7/A0-A6,$1234               ;test11
+00007032                            26  
+00007032  4CD5 4FE7                 27          MOVEM.L     (A5),D0-D2/D5-D7/A0-A3/A6       ;test12
+00007036  48A7 FDFE                 28          MOVEM.W     D0-D5/D7/A0-A6,-(A7)            ;test13
+0000703A  4C9F 7FBF                 29          MOVEM.W     (A7)+,D0-D5/D7/A0-A6            ;test14
+0000703E                            30  
+0000703E  48F6 07E0 483A            31          MOVEM.L     A0/A1/A2/D5/D6/D7,$3A(A6,D4.L)  ;test15
+00007044  4CD8 1B07                 32          MOVEM.L     (A0)+,D0/D1/D2/A4/A3/A0/A1      ;test16
+00007048                            33        
+00007048  FFFF FFFF                 34          SIMHALT                ;halt simulator
+0000704C                            35  
+0000704C                            36          END     START          ;last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+START               7000
