@@ -222,12 +222,13 @@ Immed_Long      ADDA.W  #2,A3
 * Registers in : 
 * Registers out: 
 *---------------Opcode--Operands------------Comments---------------------------
-EA_INVALID      LEA     DISP_INVALID,A1  ;Store the console message for output.
+EA_INVALID      LEA     DISP_INVALIDEA,A1   ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
                 
                 ADDA.W  #2,A2               ;Advance opcode pointer
                 RTS                         ;This should throw an error with output
+
 
 
 

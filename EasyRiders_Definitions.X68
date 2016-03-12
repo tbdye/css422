@@ -47,6 +47,7 @@ DISP_CMPI       DC.B    'CMPI',0
 DISP_DIVS       DC.B    'DIVS',0
 DISP_DIVU       DC.B    'DIVU',0
 DISP_INVALID    DC.B    'DATA',0         *REMINDER: Label changed without changing name
+DISP_INVALIDEA  DC.B    'BadEA',0
 DISP_JSR        DC.B    'JSR',0
 DISP_LEA        DC.B    'LEA',0
 DISP_LSL        DC.B    'LSL',0
@@ -111,6 +112,7 @@ CURRENT_OP      DS.W    1                   ;Safe storage for current op word be
 DATA_START_LOC  DS.L    1                   ;Location to begin reading test data
 DATA_END_LOC    DS.L    1                   ;Location to end reading test data
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+
 
 
 
