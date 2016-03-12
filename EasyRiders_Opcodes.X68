@@ -295,15 +295,27 @@ OP_BccGroup     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
                 MOVE.B  #5,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
                 
-                MOVE.W  (A2),D5             ;Reload full opcode for evaluation
-                CLR.L   D7
-                MOVE.B  D5,D7               ;Evaluate last byte only for SR_PrintHex
+                MOVEA.L A2,A3               ;Copy the current opcode location
+                ADDA.W  #2,A3               ;Advance to end of opcode to calculate displacement
+
+                JSR     SR_Eval7to0         ;Reads A2, Returns D7
                 
-                MOVE.L  #2,D6               ;Number of characters to display.
+                CMP.B   $80,D7              ;Check if the number is a negative 2's complement byte
+                BLT     bgSub8bit           ;If so, handle it appropriately.
+                ADDA.W  D7,A3               ;Apply displacement to address pointer to get branch location
+
+bgReturn        MOVE.L  A3,D7               ;Copy the branch location to D7 for SR_PrintHex
+                MOVE.L  #8,D6               ;Number of characters to display.
                 JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
                 
 bgFinish        JSR     SR_PrintCRLF
                 RTS
+
+bgSub8bit       MULS    #-1,D7              ;Find the absolute value of the negative number
+                CLR.L   D5
+                MOVE.B  D7,D5               ;Isolate the last byte as the displacement
+                SUBA.W  D5,A3               ;Apply displacement to address pointer to get branch location
+                BRA     bgReturn
 
 bg16bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
@@ -312,8 +324,11 @@ bg16bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name an
                 
                 ADDA.W  #2,A3               ;The next word contains the absolute data.
                 
-                MOVE.W  (A3),D7             ;Prepare to print the data.
-                MOVE.L  #4,D6               ;Number of characters to display
+                MOVE.W  (A3),D7             ;Copy the absolute data to calculate displacement
+                ADDA.W  D7,A3               ;Apply displacement to address pointer to get branch location
+                
+                MOVE.L  A3,D7               ;Copy the branch location to D7 for SR_PrintHex
+                MOVE.L  #8,D6               ;Number of characters to display
                 JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
                 
                 ADDA.W  #2,A2               ;Advance the instruction pointer.
@@ -327,7 +342,10 @@ bg32bit         MOVE.B  #7,TAB_LENGTH       ;Print spaces between opcode name an
                 
                 ADDA.W  #2,A3               ;The next word contains the absolute data.
                 
-                MOVE.W  (A3),D7             ;Prepare to print the data.
+                MOVE.W  (A3),D7             ;Copy the absolute data to calculate displacement
+                ADDA.W  D7,A3               ;Apply displacement to address pointer to get branch location
+                
+                MOVE.L  A3,D7               ;Copy the branch location to D7 for SR_PrintHex
                 MOVE.L  #8,D6               ;Number of characters to display
                 JSR     SR_PrintHex         ;Reads D6 and D7, Returns console output.
                 
@@ -434,6 +452,8 @@ OP_DIVS         LEA     DISP_DIVS,A1        ;Store the console message for outpu
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
 
+                MOVE.B  #1,OP_SIZE          ;Store the size of the EA as word.
+
                 MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
 
@@ -456,6 +476,8 @@ OP_DIVS         LEA     DISP_DIVS,A1        ;Store the console message for outpu
 OP_DIVU         LEA     DISP_DIVU,A1        ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
+
+                MOVE.B  #1,OP_SIZE          ;Store the size of the EA as word.
 
                 MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
@@ -740,6 +762,8 @@ OP_MULS         LEA     DISP_MULS,A1        ;Store the console message for outpu
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
 
+                MOVE.B  #1,OP_SIZE          ;Store the size of the EA as word.
+
                 MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
 
@@ -762,6 +786,8 @@ OP_MULS         LEA     DISP_MULS,A1        ;Store the console message for outpu
 OP_MULU         LEA     DISP_MULU,A1        ;Store the console message for output.
                 MOVE.B  #14,D0              ;Will display from A1 without CR,LF.
                 TRAP    #15                 ;Display to console.
+
+                MOVE.B  #1,OP_SIZE          ;Store the size of the EA as word.
 
                 MOVE.B  #6,TAB_LENGTH       ;Print spaces between opcode name and EA
                 JSR     SR_PrintTab         ;Reads TAB_LENGTH, Returns console output.
@@ -1055,6 +1081,18 @@ opSqIfZero      MOVE.W  #8,D1               ;#0 - value of zero represents a cou
 *   Print memory address
 opSqDone        JSR     SR_PrintCRLF        ;Returns console output.
                 RTS
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

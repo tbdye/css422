@@ -104,6 +104,13 @@ SR_Eval5to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
                 LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
+* Evaluate Bits 7 to 0 --------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Eval7to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                LSL.W   #8,D7               ;Truncate up to bit 7
+                LSR.W   #8,D7               ;Isolate remainder
+                RTS
+
 * Evaluate Bits 7 to 4 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval7to4     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
@@ -173,7 +180,8 @@ SR_Eval11to9    MOVE.W  (A2),D7             ;Reload full opcode for evaluation
 * Registers passed: A2
 * Return: Null
 *---------------Opcode--Operands------------Comments---------------------------
-SR_PrintAddr    MOVE.W  A2,D7
+SR_PrintAddr    CLR.L   D7
+                MOVE.W  A2,D7
                 MOVE.L  #8,D6
                 JSR     SR_PrintHex
                 
@@ -213,7 +221,7 @@ SR_PrintEA      MOVE.W  SRC_MODE,D2
 SR_PrintHex     MOVEM.L D3-D6,-(SP)         ;Store registers to stack
                 
                 LEA     TABLE_HEXCHAR,A3
-                MULU.W  #4,D6               ;Convert number of digits to total bits
+                MULU.W  #4,D6               ;Convert number of digits to total bits (4 bits per char)
                 
                 MOVE.L  #32,D3              ;Set the total number of bits
                 SUB.L   D6,D3               ;Set the bit displacement for nibbles left to right
@@ -328,6 +336,9 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
+
 
 
 
