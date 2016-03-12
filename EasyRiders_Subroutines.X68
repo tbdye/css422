@@ -104,6 +104,13 @@ SR_Eval5to3     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
                 LSR.W   D0,D7               ;Isolate remainder
                 RTS
 
+* Evaluate Bits 7 to 0 --------------------------------------------------------
+*---------------Opcode--Operands------------Comments---------------------------
+SR_Eval7to0     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
+                LSL.W   #8,D7               ;Truncate up to bit 7
+                LSR.W   #8,D7               ;Isolate remainder
+                RTS
+
 * Evaluate Bits 7 to 4 --------------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 SR_Eval7to4     MOVE.W  (A2),D7             ;Reload full opcode for evaluation
@@ -329,6 +336,8 @@ saSub37         SUB.B   #$37,D0             ; Strip 37
                 BRA     saReturn            ; Go back
 saSub30         SUB.B   #$30,D0             ; Strip 30
 saReturn        RTS                         ; Go back
+
+
 
 
 
