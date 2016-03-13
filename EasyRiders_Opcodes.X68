@@ -792,7 +792,15 @@ OpMovemLoop     BTST    D7,D6
                 JSR     OpMovemPrint      ;Current bit is 0. Move to print routine.
                 BRA     OpMovemLoopEnd    ;Move to next iteration of loop after printing
                 
-OpMovemLoopSkip MOVE.B  D7,MOVEM_LAST       ;Current bit is 1, save number as last of the list
+OpMovemLoopSkip CMP.B   #7,D7
+                BNE     MovemLoopSkip2
+                
+                CMP.B   #17,MOVEM_FIRST
+                BEQ     MovemLoopSkip2
+                
+                JSR     OpMovemPrint
+
+MovemLoopSkip2  MOVE.B  D7,MOVEM_LAST       ;Current bit is 1, save number as last of the list
                 
                 CMP.B   #17,MOVEM_FIRST
                 BNE     OpMovemLoopEnd         
@@ -1369,3 +1377,4 @@ opSqDone        JSR     SR_PrintCRLF        ;Returns console output.
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
