@@ -710,12 +710,24 @@ MOVE_Basic      MOVE.W  (A2),CURRENT_OP
 * Move Multiple Registers -----------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
 OP_MOVEM        LEA     TABLE_HEXCHAR,A4
-                LEA     DISP_MOVEM,A1       
+                LEA     DISP_MOVEM,A1      
                 MOVE.B  #14,D0
                 TRAP    #15
                 
+                *Determine EA mode                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,DEST_MODE
+                
+                *Determine EA reg
+                JSR     SR_Eval2to0
+                MOVE.B  D7,DEST_REGISTER
+                
+                MOVEA.L A2,A3               ;Store current address in a safer register
+                MOVE.W  (A3),D3             ;Store opword in data register for testing
+                MOVE.W  D3,CURRENT_OP       ;Store opword safely for later
+                
                 *Check and print size
-                BTST    #6,(A2)
+                BTST    #6,D3
                 BEQ     OpMovemWord
 
 OpMovemLong     LEA     DISP_SIZE_L,A1
@@ -724,29 +736,46 @@ OpMovemLong     LEA     DISP_SIZE_L,A1
                 
                 MOVE.B  #2,OP_SIZE
                                 
-                BRA     OpMovemMask
+                BRA     MovemDirCheck
 
 OpMovemWord     LEA     DISP_SIZE_W,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 
                 MOVE.B  #1,OP_SIZE
+                
+MovemDirCheck   BTST    #10,D3
+                BEQ     OpMovemMask
+                
+                MOVE.B  #5,D7
+                JSR     SR_PrintTab
+                
+                CLR.L   D2
+                CLR.L   D3
+                CLR.L   D4
+                MOVE.B  DEST_MODE,D2
+                MOVE.B  DEST_REGISTER,D3
+                MOVE.B  OP_SIZE,D4
+                ADDA.W  #2,A2                   ;Trick EA decoder into skipping over register mask
+                JSR     EA_Decode_EA
+                SUBA.W  #2,A2                   ;Restore A2
+                MOVEA.L A2,A3                   ;bugfix
+                
+                LEA     DISP_COMMA,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                BRA     MovemTabSkip
 
 OpMovemMask     MOVE.B  #5,D7           ;Print tab after op size
                 JSR     SR_PrintTab
                 
-                *Grab register list mask for processing
-                MOVEA.L A2,A3
+MovemTabSkip    *Grab register list mask for processing
                 ADDA.L  #2,A3
                 
                 CLR.L   D6
-                MOVE.W  (A3),D6
-                
-                *Determine EA mode                
-                JSR     SR_Eval5to3
-                MOVE.B  D7,DEST_MODE     
+                MOVE.W  (A3),D6     
                                 
-OpMovemENDIF    CLR.L   D7
+                CLR.L   D7
 
 OpMovemNewLoop  
                 MOVE.B  #15,D7              ;Prepare a counter for looping through register list
@@ -780,8 +809,14 @@ OpMovemLoopEnd  SUB.B   #1,D7               ;Decrement loop counter
                 JSR     OpMovemPrint
 
 
-OpMovemEA       JSR     SR_Eval2to0
-                MOVE.B  D7,D3
+OpMovemEA       MOVE.W  CURRENT_OP,D3
+                BTST    #10,D3
+                BNE     MovemEASkip
+
+                CLR.L   D2
+                CLR.L   D3
+                CLR.L   D4
+                MOVE.B  DEST_REGISTER,D3
                 MOVE.B  OP_SIZE,D4
                 MOVE.B  DEST_MODE,D2
 
@@ -789,9 +824,11 @@ OpMovemEA       JSR     SR_Eval2to0
                 MOVE.B  #14,D0
                 TRAP    #15
                 
-                JSR     EA_Decode_EA  
+                ADDA.W  #2,A2                   ;Trick EA decoder into skipping over register mask
+                JSR     EA_Decode_EA
+                SUBA.W  #2,A2                   ;Restore A2 
 
-                JSR     SR_PrintCRLF
+MovemEASkip     JSR     SR_PrintCRLF
                 
                 ADDA.L  #2,A2                      ;Skip over register list mask         
                 
