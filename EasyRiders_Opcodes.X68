@@ -709,10 +709,235 @@ MOVE_Basic      MOVE.W  (A2),CURRENT_OP
 
 * Move Multiple Registers -----------------------------------------------------
 *---------------Opcode--Operands------------Comments---------------------------
-OP_MOVEM        ADDA.W  #2,A2               ;Need to advance input for testing
-                LEA     DISP_MOVEM,A1
-                MOVE.B  #13,D0
+OP_MOVEM        LEA     TABLE_HEXCHAR,A4
+                LEA     DISP_MOVEM,A1       
+                MOVE.B  #14,D0
                 TRAP    #15
+                
+                *Check and print size
+                BTST    #6,(A2)
+                BEQ     OpMovemWord
+
+OpMovemLong     LEA     DISP_SIZE_L,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #2,OP_SIZE
+                                
+                BRA     OpMovemMask
+
+OpMovemWord     LEA     DISP_SIZE_W,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  #1,OP_SIZE
+
+OpMovemMask     MOVE.B  #5,D7           ;Print tab after op size
+                JSR     SR_PrintTab
+                
+                *Grab register list mask for processing
+                MOVEA.L A2,A3
+                ADDA.L  #2,A3
+                
+                CLR.L   D6
+                MOVE.W  (A3),D6
+                
+                *Determine EA mode                
+                JSR     SR_Eval5to3
+                MOVE.B  D7,DEST_MODE     
+                                
+OpMovemENDIF    CLR.L   D7
+
+OpMovemNewLoop  
+                MOVE.B  #15,D7              ;Prepare a counter for looping through register list
+                MOVE.B  #17,MOVEM_FIRST     ;Set MOVEM_FIRST outside of possible range 
+                MOVE.B  #17,MOVEM_LAST
+                MOVE.B  #0,MOVEM_PRINTED    ;Clear printed before starting the loop                
+
+OpMovemLoop     BTST    D7,D6
+                BNE     OpMovemLoopSkip
+                
+                CMP.B   #17,MOVEM_FIRST
+                BEQ     OpMovemLoopEnd
+
+                JSR     OpMovemPrint      ;Current bit is 0. Move to print routine.
+                BRA     OpMovemLoopEnd    ;Move to next iteration of loop after printing
+                
+OpMovemLoopSkip MOVE.B  D7,MOVEM_LAST       ;Current bit is 1, save number as last of the list
+                
+                CMP.B   #17,MOVEM_FIRST
+                BNE     OpMovemLoopEnd         
+                
+                MOVE.B  D7,MOVEM_FIRST      ;If first has not been set, set current bit as first
+                BRA     OpMovemLoopEnd
+
+OpMovemLoopEnd  SUB.B   #1,D7               ;Decrement loop counter
+                CMP.B   #0,D7               ;Exit loop if counter < 0
+                BGE     OpMovemLoop
+
+                CMP.B   #17,MOVEM_FIRST              ;Check if final chunk of register list has been printed
+                BEQ     OpMovemEA
+                JSR     OpMovemPrint
+
+
+OpMovemEA       JSR     SR_Eval2to0
+                MOVE.B  D7,D3
+                MOVE.B  OP_SIZE,D4
+                MOVE.B  DEST_MODE,D2
+
+                LEA     DISP_COMMA,A1          ;Print a comma after register list
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                JSR     EA_Decode_EA  
+
+                JSR     SR_PrintCRLF
+                
+                ADDA.L  #2,A2                      ;Skip over register list mask         
+                
+                RTS
+                
+OpMovemPrint    MOVE.B  MOVEM_PRINTED,D5
+                CMP.B   #1,D5
+                BLT     OpMovemStart
+                
+                LEA     DISP_SLASH,A1              ;Print a slash before anything else if this is not the first chunk of registers from the list
+                MOVE.B  #14,D0
+                TRAP    #15
+
+OpMovemStart    
+                MOVE.B  DEST_MODE,D0
+                CMP.B   #4,D0     
+                BEQ     OpMovemPrintPre           ;Printing will be different for pre decrement mode
+
+                MOVE.B  MOVEM_FIRST,D5
+                CMP.B   #7,D5
+                BGT     OpMovemA
+                
+                JSR     OpMovemPrintD
+                BRA     OpMovemNext
+                
+OpMovemA        JSR     OpMovemPrintA
+     
+OpMovemNext     MOVE.B  MOVEM_LAST,D0
+                CMP.B   MOVEM_FIRST,D0
+                BEQ     OpMovemPrintEnd
+                
+                LEA     DISP_MINUS,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  MOVEM_LAST,D5
+                CMP.B   #7,D5
+                BGT     OpMovemA2
+                
+                JSR     OpMovemPrintD
+                BRA     OpMovemPrintEnd
+                
+OpMovemA2       JSR     OpMovemPrintA
+
+OpMovemPrintEnd MOVE.B  #17,MOVEM_FIRST
+                MOVE.B  #17,MOVEM_LAST
+                MOVE.B  #1,MOVEM_PRINTED
+                
+                RTS
+
+OpMovemPrintPre 
+                MOVE.B  MOVEM_FIRST,D5
+                CMP.B   #7,D5
+                BGT     OpMovemDPre
+                
+                JSR     MovemMirror
+                JSR     OpMovemPrintA
+                BRA     OpMovemNextPre
+                
+OpMovemDPre     SUB.B   #8,D5
+                JSR     MovemMirror
+                JSR     OpMovemPrintD
+     
+OpMovemNextPre  MOVE.B  MOVEM_LAST,D0
+                CMP.B  MOVEM_FIRST,D0
+                BEQ     OpMovemPrintEnd
+                
+                LEA     DISP_MINUS,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                MOVE.B  MOVEM_LAST,D5
+                CMP.B   #7,D5
+                BGT     OpMovemD2Pre
+                
+                JSR     MovemMirror
+                JSR     OpMovemPrintA
+                BRA     OpMovemPrintEnd
+                
+OpMovemD2Pre    SUB.B   #8,D5
+                JSR     MovemMirror
+                JSR     OpMovemPrintD
+
+                BRA     OpMovemPrintEnd
+                
+OpMovemPrintD   MOVE.L  #26,D0
+                LEA.L   0(A4,D0),A1        ;Print D
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                BRA     OpMovemPrintReg
+                
+OpMovemPrintA   MOVE.L  #20,D0
+                LEA.L   0(A4,D0),A1        ;Print A
+                MOVE.B  #14,D0
+                TRAP    #15
+                
+                BRA     OpMovemPrintReg
+
+                
+OpMovemPrintReg CMP.B   #8,D5
+                BLT     OpMovemSkip
+                SUB.B   #8,D5
+
+OpMovemSkip     MOVE.L  D5,D1
+                MOVE.B  #3,D0
+                TRAP    #15
+                
+                RTS
+                
+MovemMirror     CMP.B   #0,D5
+                BNE     Mirror1
+                MOVE.B  #7,D5
+                RTS
+                
+Mirror1         CMP.B   #1,D5
+                BNE     Mirror2
+                MOVE.B  #6,D5
+                RTS
+                
+Mirror2         CMP.B   #2,D5
+                BNE     Mirror3
+                MOVE.B  #5,D5
+                RTS
+
+Mirror3         CMP.B   #3,D5
+                BNE     Mirror4
+                MOVE.B  #4,D5
+                RTS
+
+Mirror4         CMP.B   #4,D5
+                BNE     Mirror5
+                MOVE.B  #3,D5
+                RTS
+
+Mirror5         CMP.B   #5,D5
+                BNE     Mirror6
+                MOVE.B  #2,D5
+                RTS
+
+Mirror6         CMP.B   #6,D5
+                BNE     Mirror7
+                MOVE.B  #1,D5
+                RTS
+
+Mirror7         MOVE.B  #0,D5
                 RTS
 
 * Move Quick ------------------------------------------------------------------
