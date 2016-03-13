@@ -47,6 +47,7 @@ DISP_CMPI       DC.B    'CMPI',0
 DISP_DIVS       DC.B    'DIVS',0
 DISP_DIVU       DC.B    'DIVU',0
 DISP_INVALID    DC.B    'DATA',0         *REMINDER: Label changed without changing name
+
 DISP_INVALIDEA  DC.B    'BadEA',0
 DISP_JSR        DC.B    'JSR',0
 DISP_LEA        DC.B    'LEA',0
@@ -55,8 +56,8 @@ DISP_LSR        DC.B    'LSR',0
 DISP_MOVE       DC.B    'MOVE',0
 DISP_MOVEM      DC.B    'MOVEM',0
 DISP_MOVEQ      DC.B    'MOVEQ',0
-DISP_MULS       DC.B    'MULS',0
 DISP_MULU       DC.B    'MULU',0
+DISP_MULS       DC.B    'MULS',0
 DISP_NOP        DC.B    'NOP',0
 DISP_ROL        DC.B    'ROL',0
 DISP_ROR        DC.B    'ROR',0
@@ -77,6 +78,7 @@ DISP_OPAREN     DC.B    '(',0
 DISP_CPAREN     DC.B    ')',0
 DISP_SPACE      DC.B    ' ',0
 DISP_COMMA      DC.B    ',',0
+DISP_SLASH      DC.B    '/',0
 DISP_SIZE_B     DC.B    '.B',0
 DISP_SIZE_L     DC.B    '.L',0
 DISP_SIZE_W     DC.B    '.W',0
@@ -112,6 +114,9 @@ CURRENT_OP      DS.W    1                   ;Safe storage for current op word be
 DATA_START_LOC  DS.L    1                   ;Location to begin reading test data
 DATA_END_LOC    DS.L    1                   ;Location to end reading test data
 INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii strings.
+MOVEM_FIRST     DS.B    1                   ;Tracks the first register in a list for movem
+MOVEM_LAST      DS.B    1                   ;Tracks the most recent register in a list for movem as a loop goes through the mask
+MOVEM_PRINTED   DS.B    1                   ;Boolean that tracks whether or not the movemprint subroutine has been called
 
 
 
@@ -131,9 +136,3 @@ INPUT_BUFFER    DS.L    1                   ;Create an input buffer for ascii st
 
 
 
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
