@@ -1,0 +1,57 @@
+EASy68K output log file: 3/13/2016 1:04:59 PM
+
+68K Disassember Final Project
+Written by Thomas Dye and Ross Holzworth
+CSS 422 Final Project - University of Washington | Bothell
+
+Test data starts from location: 7000
+
+Test data ends at location: 706E
+
+00007000   ADD.B     D0,D1
+00007002   ADDA.W    D0,A0
+00007004   ADDI.B    #$00FF,D0
+00007008   ADDQ.B    #1,D0
+0000700A   AND.B     D0,D1
+0000700C   ANDI.B    #$0001,D0
+00007010   ASL.B     #1,D0
+00007012   ASR.B     #1,D0
+00007014   BCC.B     00006FFC
+00007016   BCC.B     00006FFC
+00007018   BCC       00006FFC
+0000701C   BGT       00007076
+00007020   BGT.B     00007076
+00007022   BGT       00007076
+00007026   BLE.B     0000702E
+00007028   BLE.B     0000702E
+0000702A   BLE       0000702E
+0000702E   CLR.B     D0
+00007030   CMP.B     D0,D1
+00007032   CMPI.B    #$0001,D0
+00007036   DIVS      #$0001,D1
+0000703A   DIVU      #$0001,D1
+Press enter to continue output.
+
+0000703E   JSR       $0000707A
+00007044   LEA       $0000707C,A0
+0000704A   LSL.B     #1,D0
+0000704C   LSR.B     #1,D0
+0000704E   MOVE.B    D0,D1
+00007050   MOVE.L    D0,D1
+00007052   MOVE.W    D0,D1
+00007054   MOVEM.W   D0,-(A7)
+00007058   MOVEQ     #$01,D0
+0000705A   MULS      D0,D1
+0000705C   NOP
+0000705E   DATA      $4641
+00007060   ROL.B     #1,D0
+00007062   ROR.B     #1,D0
+00007064   SUBQ.B    #1,D0
+00007066   SUBI.B    #$00FF,D0
+0000706A   SUB.B     D0,D1
+0000706C   SUBQ.W    #1,A0
+0000706E   SUBA.W    #$00FF,A0
+End of test data reached.
+
+Test another location? (yes/no): no
+
