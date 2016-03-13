@@ -22,7 +22,6 @@ MSG_LOC_END     DC.B    'Test data ends at location: ',0
 MSG_PAUSE       DC.B    'Press enter to continue output.',CR,LF,0
 MSG_RESTART     DC.B    'End of test data reached.',CR,LF,CR,LF
                 DC.B    'Test another location? (yes/no): ',0
-MSG_ADDR_LOW    DC.B    'The starting address must be $00000400 or higher.',CR,LF,CR,LF,0
 MSG_ADDR_ODD    DC.B    'The address cannot end on an odd byte!',CR,LF,CR,LF,0
 MSG_ADDR_ORDER  DC.B    'The ending address cannot be before the starting address!',CR,LF,CR,LF,0
 MSG_LINEBREAK   DC.B    CR,LF,0
@@ -47,7 +46,6 @@ DISP_CMPI       DC.B    'CMPI',0
 DISP_DIVS       DC.B    'DIVS',0
 DISP_DIVU       DC.B    'DIVU',0
 DISP_INVALID    DC.B    'DATA',0         *REMINDER: Label changed without changing name
-
 DISP_INVALIDEA  DC.B    'BadEA',0
 DISP_JSR        DC.B    'JSR',0
 DISP_LEA        DC.B    'LEA',0
@@ -118,21 +116,7 @@ MOVEM_FIRST     DS.B    1                   ;Tracks the first register in a list
 MOVEM_LAST      DS.B    1                   ;Tracks the most recent register in a list for movem as a loop goes through the mask
 MOVEM_PRINTED   DS.B    1                   ;Boolean that tracks whether or not the movemprint subroutine has been called
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
