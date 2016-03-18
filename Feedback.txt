@@ -1,0 +1,7 @@
+90/90
+
+Excellent work!
+Only one minor issue when decoding: ADDA.L        D1,A2
+
+But, your work still deserves the full points!
+I see you also decode more opcodes, hope that did not take you much time. 
